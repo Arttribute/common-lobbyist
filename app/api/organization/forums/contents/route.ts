@@ -35,14 +35,14 @@ export async function GET(request: Request) {
 }
 
 /**
- * POST /api/forums/contents - Create a new content in a forum
+ * POST /api/organization/forums/contents - Create a new content in a forum
  */
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { forumId, type, content, authorId, parentId } = body;
+    const { forumId, daoId, type, content, authorId, parentId } = body;
 
-    if (!forumId || !type || !content || !authorId) {
+    if (!forumId || !daoId || !type || !content || !authorId) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
@@ -51,29 +51,40 @@ export async function POST(request: Request) {
 
     await dbConnect();
 
-    // Determine depth and rootId
+    // Create a temporary content to get the _id
+    const tempContent = new Content({
+      forumId,
+      daoId,
+      type,
+      content,
+      authorId,
+      parentId: parentId || null,
+      depth: 0,
+      rootId: "temp",
+      path: "temp",
+    });
+
+    // Determine depth, rootId, and path
     let depth = 0;
-    let rootId = null;
+    let rootId = tempContent._id.toString();
+    let path = rootId;
+
     if (parentId) {
       const parentContent = await Content.findById(parentId);
       if (parentContent) {
         depth = parentContent.depth + 1;
         rootId = parentContent.rootId || parentId;
+        path = `${parentContent.path}/${tempContent._id.toString()}`;
       }
     }
 
-    const newContent = new Content({
-      forumId,
-      type,
-      content,
-      authorId,
-      parentId,
-      depth,
-      rootId,
-    });
+    // Update with correct values
+    tempContent.depth = depth;
+    tempContent.rootId = rootId;
+    tempContent.path = path;
 
-    await newContent.save();
-    return NextResponse.json(newContent, { status: 201 });
+    await tempContent.save();
+    return NextResponse.json(tempContent, { status: 201 });
   } catch (error) {
     console.error("Error creating content:", error);
     return NextResponse.json(

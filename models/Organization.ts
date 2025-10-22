@@ -1,7 +1,7 @@
-// models/Dao.ts
+// models/Organization.ts
 import mongoose from "mongoose";
 
-const DaoSchema = new mongoose.Schema(
+const OrganizationSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
     description: { type: String },
@@ -22,4 +22,5 @@ const DaoSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-export default mongoose.models.Dao || mongoose.model("Dao", DaoSchema);
+export default mongoose.models.Organization ||
+  mongoose.model("Organization", OrganizationSchema);

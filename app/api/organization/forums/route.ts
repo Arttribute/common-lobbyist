@@ -5,27 +5,24 @@ import Forum from "@/models/Forum";
 import { NextResponse } from "next/server";
 
 /**
- * GET /api/forums - Get all forums for a DAO
+ * GET /api/organization/forums - Get all forums for an organization
  */
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const daoId = searchParams.get("daoId");
-  if (!daoId) {
+  const organizationId = searchParams.get("organizationId");
+  if (!organizationId) {
     return NextResponse.json(
-      { error: "Missing daoId parameter" },
+      { error: "Missing organizationId parameter" },
       { status: 400 }
     );
   }
   try {
     await dbConnect();
-    const forums = await Forum.find({ daoId });
-    return NextResponse.json(forums, { status: 200 });
+    const forums = await Forum.find({ daoId: organizationId });
+    return NextResponse.json(forums || [], { status: 200 });
   } catch (error) {
     console.error("Error fetching forums:", error);
-    return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 }
-    );
+    return NextResponse.json([], { status: 200 });
   }
 }
 
