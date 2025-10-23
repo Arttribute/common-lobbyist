@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Search, Bell } from "lucide-react";
+import { Search, Bell, Square, Edit } from "lucide-react";
 import OrganizationCard from "@/components/organization-card";
 
 export default function OrganizationsPage() {
@@ -35,9 +35,7 @@ export default function OrganizationsPage() {
         <div className="max-w-[1336px] mx-auto px-6 h-[57px] flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link href="/" className="flex items-center gap-2">
-              <svg width="45" height="45" viewBox="0 0 45 45" className="fill-black dark:fill-white">
-                <path d="M5 40V5h35v35H5z"></path>
-              </svg>
+              <Square className="w-11 h-11 fill-black dark:fill-white stroke-none" />
             </Link>
             <div className="relative hidden md:block">
               <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-500" />
@@ -54,9 +52,7 @@ export default function OrganizationsPage() {
               href="/new"
               className="flex items-center gap-2 text-sm text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white"
             >
-              <svg width="24" height="24" viewBox="0 0 24 24" className="fill-current">
-                <path d="M14 4a.5.5 0 0 0 0-1v1zm-4-1a.5.5 0 0 0 0 1V3zm4.5 12.5l.354.354a.5.5 0 0 0 0-.708L14.5 15.5zm-5 0l-.354.354a.5.5 0 0 0 0-.708L9.5 15.5zM14 3h-4v1h4V3zm0 1a.5.5 0 0 1 .5.5h1A1.5 1.5 0 0 0 14 3v1zm.5.5v10h1v-10h-1zm0 10a.5.5 0 0 1-.146.354l.708.707A1.5 1.5 0 0 0 15.5 14.5h-1zm-.146.354l-5 5 .708.707 5-5-.708-.707zm-5 4.293l-5-5-.708.707 5 5 .708-.707zM9 14.5v-10H8v10h1zm0-10A.5.5 0 0 1 9.5 4V3A1.5 1.5 0 0 0 8 4.5h1z"></path>
-              </svg>
+              <Edit className="w-6 h-6" />
               <span className="hidden md:inline">Write</span>
             </Link>
             <button className="text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white">
