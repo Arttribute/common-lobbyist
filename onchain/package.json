@@ -2,6 +2,11 @@
   "name": "onchain",
   "version": "1.0.0",
   "type": "module",
+  "scripts": {
+    "deploy:base-sepolia": "hardhat run scripts/deploy.ts --network baseSepolia",
+    "deploy:base-mainnet": "hardhat run scripts/deploy.ts --network baseMainnet",
+    "deploy:sepolia": "hardhat run scripts/deploy.ts --network sepolia"
+  },
   "devDependencies": {
     "@nomicfoundation/hardhat-ignition": "^3.0.3",
     "@nomicfoundation/hardhat-toolbox-viem": "^5.0.0",
@@ -14,6 +19,7 @@
   "dependencies": {
     "@openzeppelin/contracts": "^5.4.0",
     "chai": "^6.2.0",
+    "dotenv": "^17.2.3",
     "install": "^0.13.0",
     "npm": "^11.6.2"
   }
