@@ -10,5 +10,11 @@
     "hardhat": "^3.0.9",
     "typescript": "~5.8.0",
     "viem": "^2.38.3"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.4.0",
+    "chai": "^6.2.0",
+    "install": "^0.13.0",
+    "npm": "^11.6.2"
   }
 }
