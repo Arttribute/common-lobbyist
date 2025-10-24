@@ -16,12 +16,15 @@ import { agentCommonsService } from "@/lib/services/agentcommons";
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { organizationId: string } }
+  { params }: { params: Promise<{ organizationId: string }> }
 ) {
   try {
+    // Await params (Next.js 15 requirement)
+    const resolvedParams = await params;
+
     await dbConnect();
 
-    const organization = await Organization.findById(params.organizationId);
+    const organization = await Organization.findById(resolvedParams.organizationId);
     if (!organization) {
       return NextResponse.json(
         { error: "Organization not found" },
@@ -68,9 +71,12 @@ export async function GET(
  */
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { organizationId: string } }
+  { params }: { params: Promise<{ organizationId: string }> }
 ) {
   try {
+    // Await params (Next.js 15 requirement)
+    const resolvedParams = await params;
+
     // Authenticate the user
     const user = await getAuthenticatedUser(request);
     if (!user || !user.walletAddress) {
@@ -82,7 +88,7 @@ export async function PUT(
 
     await dbConnect();
 
-    const organization = await Organization.findById(params.organizationId);
+    const organization = await Organization.findById(resolvedParams.organizationId);
     if (!organization) {
       return NextResponse.json(
         { error: "Organization not found" },

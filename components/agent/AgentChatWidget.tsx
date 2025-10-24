@@ -48,7 +48,16 @@ export default function AgentChatWidget({
 
   const loadAgentBalance = async () => {
     try {
-      const response = await fetch(`/api/agent/${organizationId}/balance`);
+      const headers: Record<string, string> = {};
+
+      // Add auth token if available
+      if (authState.idToken) {
+        headers["Authorization"] = `Bearer ${authState.idToken}`;
+      }
+
+      const response = await fetch(`/api/agent/${organizationId}/balance`, {
+        headers,
+      });
 
       if (response.ok) {
         const data = await response.json();
@@ -74,11 +83,18 @@ export default function AgentChatWidget({
     setIsLoading(true);
 
     try {
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+
+      // Add auth token if available
+      if (authState.idToken) {
+        headers["Authorization"] = `Bearer ${authState.idToken}`;
+      }
+
       const response = await fetch(`/api/agent/${organizationId}/chat`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers,
         body: JSON.stringify({
           message: input,
           sessionId,

@@ -6,8 +6,9 @@
  */
 
 const AGENTCOMMONS_API_URL =
+  process.env.AGENTCOMMONS_API_URL ||
   process.env.NEXT_PUBLIC_AGENTCOMMONS_API_URL ||
-  "https://api.agentcommons.com";
+  "https://api.agentcommons.io";
 const AGENTCOMMONS_API_VERSION = "v1";
 
 export interface AgentCreateParams {
@@ -80,6 +81,12 @@ class AgentCommonsService {
   constructor() {
     this.baseUrl = `${AGENTCOMMONS_API_URL}/${AGENTCOMMONS_API_VERSION}`;
     this.apiKey = process.env.AGENTCOMMONS_API_KEY;
+
+    console.log("AgentCommonsService initialized:", {
+      baseUrl: this.baseUrl,
+      hasApiKey: !!this.apiKey,
+      rawApiUrl: AGENTCOMMONS_API_URL,
+    });
   }
 
   private async request<T>(
@@ -198,7 +205,16 @@ class AgentCommonsService {
       headers["Authorization"] = `Bearer ${this.apiKey}`;
     }
 
-    const response = await fetch(`${this.baseUrl}/agents/run/stream`, {
+    const url = `${this.baseUrl}/agents/run/stream`;
+    console.log("Calling AgentCommons stream API:", {
+      url,
+      agentId: params.agentId,
+      hasApiKey: !!this.apiKey,
+      messageCount: params.messages.length,
+      sessionId: params.sessionId,
+    });
+
+    const response = await fetch(url, {
       method: "POST",
       headers,
       body: JSON.stringify({
@@ -208,12 +224,19 @@ class AgentCommonsService {
       }),
     });
 
+    console.log("AgentCommons stream response:", {
+      status: response.status,
+      statusText: response.statusText,
+      ok: response.ok,
+    });
+
     if (!response.ok) {
       const error = await response.json().catch(() => ({
         message: response.statusText,
       }));
+      console.error("AgentCommons API error:", error);
       throw new Error(
-        `AgentCommons API Error: ${error.message || response.statusText}`
+        `AgentCommons API Error: ${error.message || response.statusText} (Status: ${response.status})`
       );
     }
 
@@ -305,7 +328,16 @@ You are transparent, data-driven, and committed to representing the authentic vo
 
 7. **Transparency**: When referencing data or past discussions, be specific about sources and context.
 
-8. **Respectful Engagement**: Treat all community members with respect, regardless of their token holdings or influence.`;
+8. **Respectful Engagement**: Treat all community members with respect, regardless of their token holdings or influence.
+
+9. **Blockchain Data Access**: You have access to tools for querying on-chain data via Blockscout. Use these when relevant:
+   - When asked about specific content signals or votes, use tools to show exact on-chain data
+   - Include Blockscout explorer links when discussing transactions or addresses
+   - Provide context about token weights and signal distribution when analyzing community sentiment
+   - Show recent activity and trending content based on on-chain signals
+   - Help users understand their own signal activity and influence in the DAO
+
+Always provide Blockscout explorer links when referencing specific transactions, addresses, or on-chain activity to allow users to verify the data themselves.`;
   }
 }
 

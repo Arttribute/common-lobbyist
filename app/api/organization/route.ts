@@ -109,6 +109,12 @@ export async function POST(request: NextRequest) {
         agentConfig?.instructions ||
         agentCommonsService.getDefaultInstructions(name);
 
+      console.log("Creating agent for DAO:", {
+        name: `${name} Community Agent`,
+        owner: user.walletAddress,
+        persona: agentPersona.substring(0, 100) + "...",
+      });
+
       const agent = await agentCommonsService.createAgent({
         name: `${name} Community Agent`,
         persona: agentPersona,
@@ -121,6 +127,8 @@ export async function POST(request: NextRequest) {
         frequencyPenalty: agentConfig?.frequencyPenalty || 0,
         commonsOwned: false,
       });
+
+      console.log("Agent created successfully:", agent.agentId);
 
       // Update the organization with agent details
       newOrganization.agent = {
@@ -137,10 +145,17 @@ export async function POST(request: NextRequest) {
       };
 
       await newOrganization.save();
-    } catch (agentError) {
+    } catch (agentError: any) {
       console.error("Error creating agent for DAO:", agentError);
+      console.error("Agent error details:", agentError.message, agentError.stack);
       // Don't fail the DAO creation if agent creation fails
       // The agent can be created later via settings
+      // Store the error so we can show it to the user
+      newOrganization.agent = {
+        enabled: false,
+        createdAt: new Date(),
+      } as any;
+      await newOrganization.save();
     }
 
     return NextResponse.json(newOrganization, { status: 201 });

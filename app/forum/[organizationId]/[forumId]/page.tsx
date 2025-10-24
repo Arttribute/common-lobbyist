@@ -8,6 +8,7 @@ import { useAuth } from "@/context/auth-context";
 import TokenBalance from "@/components/dao/token-balance";
 import SignalButton from "@/components/forum/signal-button";
 import AgentChatWidget from "@/components/agent/AgentChatWidget";
+import AgentSetupPrompt from "@/components/agent/AgentSetupPrompt";
 import type { Forum, Organization, ForumPost } from "@/types/forum";
 
 interface PageParams {
@@ -126,6 +127,19 @@ export default function ForumPage({ params }: PageParams) {
         <div className="grid grid-cols-12 gap-12">
           <div className="col-span-12 lg:col-span-8">
             <h1 className="text-4xl font-serif font-bold mb-8">{forum?.name || "Forum"}</h1>
+
+            {/* Agent Setup Prompt */}
+            {dao && !dao.agent?.agentId && (
+              <div className="mb-8">
+                <AgentSetupPrompt
+                  organizationId={resolvedParams.organizationId}
+                  organizationName={dao.name}
+                  isCreator={dao.creatorAddress?.toLowerCase() === authState.walletAddress?.toLowerCase()}
+                  onAgentCreated={fetchForumData}
+                />
+              </div>
+            )}
+
             {posts.length === 0 ? (
               <div className="text-center py-20">
                 <p className="text-base text-neutral-500 dark:text-neutral-400 mb-8">

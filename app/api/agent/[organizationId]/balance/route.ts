@@ -8,17 +8,34 @@
 import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/dbConnect";
 import Organization from "@/models/Organization";
-import { agentCommonsService } from "@/lib/services/agentcommons";
+import { createPublicClient, http, formatEther, Address } from "viem";
+import { baseSepolia } from "viem/chains";
+
+const COMMON_TOKEN_ADDRESS = "0x09d3e33fBeB985653bFE868eb5a62435fFA04e4F" as Address;
+
+// ERC-20 ABI for balanceOf
+const ERC20_ABI = [
+  {
+    name: "balanceOf",
+    type: "function",
+    stateMutability: "view",
+    inputs: [{ name: "account", type: "address" }],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+] as const;
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { organizationId: string } }
+  { params }: { params: Promise<{ organizationId: string }> }
 ) {
   try {
+    // Await params (Next.js 15 requirement)
+    const resolvedParams = await params;
+
     await dbConnect();
 
     // Get the organization and its agent config
-    const organization = await Organization.findById(params.organizationId);
+    const organization = await Organization.findById(resolvedParams.organizationId);
     if (!organization) {
       return NextResponse.json(
         { error: "Organization not found" },
@@ -33,15 +50,23 @@ export async function GET(
       );
     }
 
-    // Get agent balance from AgentCommons
-    const balance = await agentCommonsService.getAgentBalance(
-      organization.agent.agentId
-    );
+    // The agentId IS the wallet address
+    const walletAddress = organization.agent.agentId as Address;
 
-    // Get agent wallet address
-    const walletAddress = await agentCommonsService.getAgentWallet(
-      organization.agent.agentId
-    );
+    // Get the balance on-chain using viem
+    const publicClient = createPublicClient({
+      chain: baseSepolia,
+      transport: http(),
+    });
+
+    const balanceWei = await publicClient.readContract({
+      address: COMMON_TOKEN_ADDRESS,
+      abi: ERC20_ABI,
+      functionName: "balanceOf",
+      args: [walletAddress],
+    });
+
+    const balance = parseFloat(formatEther(balanceWei));
 
     return NextResponse.json(
       {

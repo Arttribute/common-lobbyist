@@ -21,7 +21,7 @@ export default function ContentInsights({
   const [insights, setInsights] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedType, setSelectedType] = useState<InsightType>("alignment");
-  const { authenticated } = useAuth();
+  const { authenticated, authState } = useAuth();
 
   const getInsights = async (type: InsightType) => {
     if (!authenticated || !content.trim()) return;
@@ -30,11 +30,18 @@ export default function ContentInsights({
     setSelectedType(type);
 
     try {
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+
+      // Add auth token if available
+      if (authState.idToken) {
+        headers["Authorization"] = `Bearer ${authState.idToken}`;
+      }
+
       const response = await fetch(`/api/agent/${organizationId}/insights`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers,
         body: JSON.stringify({
           content: content.trim(),
           type,

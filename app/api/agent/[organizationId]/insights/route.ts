@@ -14,9 +14,12 @@ import { agentCommonsService } from "@/lib/services/agentcommons";
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { organizationId: string } }
+  { params }: { params: Promise<{ organizationId: string }> }
 ) {
   try {
+    // Await params (Next.js 15 requirement)
+    const resolvedParams = await params;
+
     // Authenticate the user
     const user = await getAuthenticatedUser(request);
     if (!user || !user.walletAddress) {
@@ -29,7 +32,7 @@ export async function POST(
     await dbConnect();
 
     // Get the organization and its agent config
-    const organization = await Organization.findById(params.organizationId);
+    const organization = await Organization.findById(resolvedParams.organizationId);
     if (!organization) {
       return NextResponse.json(
         { error: "Organization not found" },

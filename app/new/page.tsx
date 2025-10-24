@@ -24,6 +24,7 @@ export default function NewOrganization() {
   const [tokenSymbol, setTokenSymbol] = useState("");
   const [initialSupply, setInitialSupply] = useState("1000000");
   const [metadataCid, setMetadataCid] = useState("");
+  const [agentPersona, setAgentPersona] = useState("");
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState<"form" | "deploying" | "saving">("form");
 
@@ -90,6 +91,9 @@ export default function NewOrganization() {
             token: result.tokenAddress,
             txHash: result.txHash,
             deployedBy: authState.walletAddress,
+          },
+          agent: {
+            persona: agentPersona,
           },
         }),
       });
@@ -176,6 +180,32 @@ export default function NewOrganization() {
               className="w-full px-0 py-2.5 text-base border-0 border-b-2 border-neutral-200 dark:border-neutral-800 bg-transparent focus:outline-none focus:border-neutral-900 dark:focus:border-neutral-100 transition-colors resize-none placeholder:text-neutral-300 dark:placeholder:text-neutral-700"
               disabled={loading}
             />
+          </div>
+
+          {/* Agent Persona */}
+          <div className="border-t border-neutral-200 dark:border-neutral-800 pt-7 mt-7">
+            <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-2">
+              Community Agent
+            </h2>
+            <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-4">
+              Your DAO will have an AI agent to help members understand community priorities and provide insights on proposals.
+            </p>
+            <div>
+              <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                Agent Persona (Optional)
+              </label>
+              <textarea
+                value={agentPersona}
+                onChange={(e) => setAgentPersona(e.target.value)}
+                placeholder="e.g. A thoughtful advocate focused on environmental sustainability and long-term community growth. Values transparency and data-driven decision making..."
+                rows={4}
+                className="w-full px-4 py-2.5 text-base border-2 border-neutral-200 dark:border-neutral-800 rounded-md bg-transparent focus:outline-none focus:border-neutral-900 dark:focus:border-neutral-100 transition-colors resize-none placeholder:text-neutral-300 dark:placeholder:text-neutral-700"
+                disabled={loading}
+              />
+              <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+                Leave blank to use a default persona that will be tailored to your DAO
+              </p>
+            </div>
           </div>
 
           {/* Token Details */}

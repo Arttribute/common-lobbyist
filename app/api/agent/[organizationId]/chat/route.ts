@@ -13,9 +13,12 @@ import { agentCommonsService } from "@/lib/services/agentcommons";
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { organizationId: string } }
+  { params }: { params: Promise<{ organizationId: string }> }
 ) {
   try {
+    // Await params (Next.js 15 requirement)
+    const resolvedParams = await params;
+
     // Authenticate the user
     const user = await getAuthenticatedUser(request);
     if (!user || !user.walletAddress) {
@@ -28,7 +31,7 @@ export async function POST(
     await dbConnect();
 
     // Get the organization and its agent config
-    const organization = await Organization.findById(params.organizationId);
+    const organization = await Organization.findById(resolvedParams.organizationId);
     if (!organization) {
       return NextResponse.json(
         { error: "Organization not found" },
@@ -80,9 +83,18 @@ export async function POST(
           const completionData = `data: ${JSON.stringify({ type: "done" })}\n\n`;
           controller.enqueue(encoder.encode(completionData));
           controller.close();
-        } catch (error) {
+        } catch (error: any) {
           console.error("Error streaming agent response:", error);
-          const errorData = `data: ${JSON.stringify({ type: "error", message: "Failed to stream response" })}\n\n`;
+          console.error("Error details:", {
+            message: error.message,
+            stack: error.stack,
+            cause: error.cause,
+          });
+          const errorData = `data: ${JSON.stringify({
+            type: "error",
+            message: error.message || "Failed to stream response",
+            details: error.toString()
+          })}\n\n`;
           controller.enqueue(encoder.encode(errorData));
           controller.close();
         }
