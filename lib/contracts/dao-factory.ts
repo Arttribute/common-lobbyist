@@ -1,5 +1,5 @@
 // lib/contracts/dao-factory.ts
-import { Address, parseUnits, WalletClient, PublicClient } from "viem";
+import { Address, parseUnits, WalletClient, PublicClient, parseEventLogs } from "viem";
 import { DaoFactoryAbi } from "@/lib/abis/dao-factory";
 import { getDaoFactoryAddress } from "./config";
 
@@ -69,20 +69,17 @@ export async function createDAOOnChain(
 
   // Optional: Verify by parsing the DaoCreated event
   try {
-    const parsedEvents = (publicClient).parseEventLogs({
+    const parsedEvents = parseEventLogs({
       abi: DaoFactoryAbi,
       logs: receipt.logs,
-    });
+      eventName: "DaoCreated",
+    }) as unknown as Array<{ args: { token: Address; signalRegistry: Address } }>;
 
-    const daoCreatedEvent = parsedEvents.find(
-      (event: any) => event.eventName === "DaoCreated"
-    );
-
-    if (daoCreatedEvent) {
+    if (parsedEvents.length > 0) {
       console.log("Verified with DaoCreated event");
       // Optionally override with event values if they differ
-      tokenAddress = daoCreatedEvent.args.token as Address;
-      registryAddress = daoCreatedEvent.args.signalRegistry as Address;
+      tokenAddress = parsedEvents[0].args.token;
+      registryAddress = parsedEvents[0].args.signalRegistry;
     }
   } catch (error) {
     console.warn(
@@ -121,11 +118,14 @@ export async function getDAOInfo(
     args: [registryAddress],
   });
 
+  // Type the result as a tuple
+  const daoData = result as readonly [Address, Address, Address, string, boolean];
+
   return {
-    daoOwner: result as any[0],
-    token: result as any[1],
-    signalRegistry: result as any[2],
-    metadataCid: result as any[3],
-    exists: result as any[4],
+    daoOwner: daoData[0],
+    token: daoData[1],
+    signalRegistry: daoData[2],
+    metadataCid: daoData[3],
+    exists: daoData[4],
   };
 }

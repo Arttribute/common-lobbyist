@@ -5,12 +5,12 @@ import { parseEther, keccak256, toBytes } from "viem";
 
 function sqrtFloor(n: bigint): bigint {
   // integer sqrt floor (for assertions)
-  if (n === 0n) return 0n;
+  if (n === BigInt(0)) return BigInt(0);
   let x = n;
-  let y = (x + 1n) / 2n;
+  let y = (x + BigInt(1)) / BigInt(2);
   while (y < x) {
     x = y;
-    y = (x + n / x) / 2n;
+    y = (x + n / x) / BigInt(2);
   }
   return x;
 }
@@ -129,7 +129,7 @@ describe("Common Lobbyist Core", async function () {
 
     const factory = await viem.deployContract("DAOFactory");
 
-    const hash = await factory.write.createDAO(["X", "X", 0n, "bafy...meta"]);
+    const hash = await factory.write.createDAO(["X", "X", BigInt(0), "bafy...meta"]);
     const receipt = await publicClient.waitForTransactionReceipt({ hash });
 
     const logs = await publicClient.getContractEvents({
@@ -152,18 +152,19 @@ describe("Common Lobbyist Core", async function () {
 
     // Should revert without tokens
     try {
-      await registry.write.signal([cid, 1n], { account: user.account });
+      await registry.write.signal([cid, BigInt(1)], { account: user.account });
       assert.fail("Should have reverted");
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Expected to fail
-      assert.ok(error.message.includes("transferFrom failed") || error.message.includes("revert"));
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      assert.ok(errorMessage.includes("transferFrom failed") || errorMessage.includes("revert"));
     }
 
     // Mint tokens and approve
-    await token.write.mint([user.account.address, 1000n], { account: deployer.account });
-    await token.write.approve([registryAddr, 1000n], { account: user.account });
+    await token.write.mint([user.account.address, BigInt(1000)], { account: deployer.account });
+    await token.write.approve([registryAddr, BigInt(1000)], { account: user.account });
 
-    await registry.write.signal([cid, 1000n], { account: user.account });
+    await registry.write.signal([cid, BigInt(1000)], { account: user.account });
 
     const cidHash = keccak256(toBytes(cid));
     const mem = await registry.read.memories([cidHash]);

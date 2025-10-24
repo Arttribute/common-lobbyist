@@ -3,19 +3,10 @@
 
 import Link from "next/link";
 import { ArrowUp, MessageCircle, Bookmark } from "lucide-react";
+import type { Organization } from "@/types/forum";
 
 interface OrganizationCardProps {
-  organization: {
-    _id: string;
-    name: string;
-    description?: string;
-    onchain: {
-      chainId: number;
-      factory: string;
-      registry: string;
-      token: string;
-    };
-  };
+  organization: Organization;
   forumCount?: number;
 }
 
@@ -39,7 +30,7 @@ export default function OrganizationCard({
             <div className="flex items-center gap-2 mb-2">
               <div className="w-5 h-5 rounded-full bg-neutral-300 dark:bg-neutral-700"></div>
               <span className="text-sm text-neutral-900 dark:text-neutral-100">
-                {chainNames[organization.onchain.chainId] || "Unknown Network"}
+                {organization.onchain?.chainId ? chainNames[organization.onchain.chainId] || "Unknown Network" : "Not Deployed"}
               </span>
             </div>
 

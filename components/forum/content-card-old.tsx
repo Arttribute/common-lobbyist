@@ -65,7 +65,7 @@ export default function ContentCard({
     return "just now";
   };
 
-  const handleReplySubmit = (data: any) => {
+  const handleReplySubmit = (data: { text: string }) => {
     if (onReply) {
       onReply(content._id, data.text);
       setShowReplyBox(false);

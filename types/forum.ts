@@ -28,6 +28,8 @@ export interface ForumPost {
   }>;
   depth?: number;
   daoId?: string;
+  rootId?: string;
+  parentId?: string;
 }
 
 export interface Forum {
@@ -46,11 +48,13 @@ export interface Organization {
   tokenSymbol: string;
   initialSupply: string;
   onchain?: {
-    chainId: number;
-    factory: string;
-    registry: string;
-    token: string;
+    chainId?: number;
+    factory?: string;
+    registry?: string;
+    token?: string;
     deployedAt?: Date;
     txHash?: string;
+    totalRaw?: string;
+    totalQuadWeight?: string;
   };
 }

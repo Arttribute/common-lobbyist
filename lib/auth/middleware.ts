@@ -56,7 +56,7 @@ export async function withAuth(
     // Get the user's wallet address from Privy
     const user = await privyClient.getUser(verifiedClaims.userId);
     const wallet = user.linkedAccounts.find(
-      (account: any) => account.type === "wallet"
+      (account: { type: string; address?: string }) => account.type === "wallet"
     );
 
     if (wallet && wallet.type === "wallet") {
@@ -96,7 +96,7 @@ export async function getAuthenticatedUser(
 
     const user = await privyClient.getUser(verifiedClaims.userId);
     const wallet = user.linkedAccounts.find(
-      (account: any) => account.type === "wallet"
+      (account: { type: string; address?: string }) => account.type === "wallet"
     );
 
     return {

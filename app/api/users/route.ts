@@ -11,8 +11,9 @@ export async function GET() {
     return new NextResponse(JSON.stringify(users), {
       status: 200,
     });
-  } catch (error: { username?: string; walletAddress?: string; email?: string }) {
-    return new NextResponse(error.message, {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : "An error occurred";
+    return new NextResponse(errorMessage, {
       status: 500,
     });
   }
@@ -39,8 +40,9 @@ export async function POST(request: Request) {
     return new NextResponse(JSON.stringify(user), {
       status: 201,
     });
-  } catch (error: { username?: string; walletAddress?: string; email?: string }) {
-    return new NextResponse(error.message, {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : "An error occurred";
+    return new NextResponse(errorMessage, {
       status: 500,
     });
   }

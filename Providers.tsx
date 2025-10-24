@@ -27,8 +27,9 @@ export default function Providers({ children }: Props) {
 
         // Embedded wallet creation on Base Sepolia
         embeddedWallets: {
-          createOnLogin: "users-without-wallets",
-          requireUserPasswordOnCreate: false,
+          ethereum: {
+            createOnLogin: "users-without-wallets",
+          },
         },
       }}
     >

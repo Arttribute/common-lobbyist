@@ -6,7 +6,7 @@ import Link from "next/link";
 import { Search, Bell, ArrowUp, MessageCircle, Bookmark, Square, Edit } from "lucide-react";
 import MarkdownRenderer from "@/components/forum/markdown-renderer";
 import { useAuth } from "@/context/auth-context";
-import type { ForumPost } from "@/types/forum";
+import type { ForumPost, Organization } from "@/types/forum";
 import TokenBalance from "@/components/dao/token-balance";
 import SignalButton from "@/components/forum/signal-button";
 
@@ -27,7 +27,7 @@ export default function PostDetailPage({ params }: PageParams) {
   } | null>(null);
 
   const [post, setPost] = useState<ForumPost | null>(null);
-  const [dao, setDao] = useState<ForumPost | null>(null);
+  const [dao, setDao] = useState<Organization | null>(null);
   const [comments, setComments] = useState<ForumPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [replyText, setReplyText] = useState("");
@@ -250,7 +250,7 @@ export default function PostDetailPage({ params }: PageParams) {
 
           {/* Post Body */}
           <div className="prose prose-lg prose-neutral dark:prose-invert max-w-none mb-12">
-            <MarkdownRenderer content={post.content.text} />
+            <MarkdownRenderer content={post.content.text || ""} />
           </div>
 
           {/* Claps and Actions Footer */}
@@ -349,7 +349,7 @@ export default function PostDetailPage({ params }: PageParams) {
                           </span>
                         </div>
                         <div className="prose prose-neutral dark:prose-invert max-w-none mb-4">
-                          <MarkdownRenderer content={comment.content.text} />
+                          <MarkdownRenderer content={comment.content.text || ""} />
                         </div>
                         <div className="flex items-center gap-4">
                           {dao?.onchain?.registry && dao?.onchain?.token ? (
