@@ -1,13 +1,15 @@
 // app/organizations/page.tsx
 "use client";
 
+import type { Organization } from "@/types/forum";
+
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Search, Bell, Square, Edit } from "lucide-react";
 import OrganizationCard from "@/components/organization-card";
 
 export default function OrganizationsPage() {
-  const [organizations, setOrganizations] = useState<any[]>([]);
+  const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

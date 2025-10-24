@@ -69,7 +69,7 @@ export async function createDAOOnChain(
 
   // Optional: Verify by parsing the DaoCreated event
   try {
-    const parsedEvents = (publicClient as any).parseEventLogs({
+    const parsedEvents = (publicClient).parseEventLogs({
       abi: DaoFactoryAbi,
       logs: receipt.logs,
     });

@@ -1,6 +1,12 @@
 import mongoose from "mongoose";
+
+interface MongooseCache {
+  conn: typeof mongoose | null;
+  promise: Promise<typeof mongoose> | null;
+}
+
 declare global {
-  var mongoose: any; // This must be a `var` and not a `let / const`
+  var mongoose: MongooseCache | undefined; // This must be a `var` and not a `let / const`
 }
 
 const MONGODB_URI = process.env.MONGODB_URI!;

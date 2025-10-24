@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import ForumCard from "@/components/forum-card";
+import type { Organization, Forum } from "@/types/forum";
 import TokenBalance from "@/components/dao/token-balance";
 
 interface PageParams {
@@ -18,8 +19,8 @@ export default function OrganizationPage({ params }: PageParams) {
     organizationId: string;
   } | null>(null);
 
-  const [organization, setOrganization] = useState<any>(null);
-  const [forums, setForums] = useState<any[]>([]);
+  const [organization, setOrganization] = useState<Organization | null>(null);
+  const [forums, setForums] = useState<Forum[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateForum, setShowCreateForum] = useState(false);
   const [newForumName, setNewForumName] = useState("");

@@ -11,7 +11,7 @@ export async function GET() {
     return new NextResponse(JSON.stringify(users), {
       status: 200,
     });
-  } catch (error: any) {
+  } catch (error: { username?: string; walletAddress?: string; email?: string }) {
     return new NextResponse(error.message, {
       status: 500,
     });
@@ -39,7 +39,7 @@ export async function POST(request: Request) {
     return new NextResponse(JSON.stringify(user), {
       status: 201,
     });
-  } catch (error: any) {
+  } catch (error: { username?: string; walletAddress?: string; email?: string }) {
     return new NextResponse(error.message, {
       status: 500,
     });

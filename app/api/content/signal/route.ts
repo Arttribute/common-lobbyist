@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
     if (userAmount !== undefined && user.walletAddress) {
       const userId = user.walletAddress;
       const existingSignalIndex = content.userSignals?.findIndex(
-        (s: any) => s.userId === userId
+        (s: { userId: string }) => s.userId === userId
       );
 
       const newAmount = userAmount.toString();

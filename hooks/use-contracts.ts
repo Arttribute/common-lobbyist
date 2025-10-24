@@ -71,7 +71,7 @@ export function useContracts() {
 
     try {
       const { walletClient, publicClient } = await getClients();
-      const result = await createDAOOnChain(walletClient as any, publicClient as any, params);
+      const result = await createDAOOnChain(walletClient, publicClient, params);
       return result;
     } catch (err) {
       const errorMessage =
@@ -95,8 +95,8 @@ export function useContracts() {
     try {
       const { walletClient, publicClient } = await getClients();
       const result = await placeSignal(
-        walletClient as any,
-        publicClient as any,
+        walletClient,
+        publicClient,
         tokenAddress,
         params
       );
@@ -121,7 +121,7 @@ export function useContracts() {
 
     try {
       const { walletClient, publicClient } = await getClients();
-      const result = await withdrawSignal(walletClient as any, publicClient as any, params);
+      const result = await withdrawSignal(walletClient, publicClient, params);
       return result;
     } catch (err) {
       const errorMessage =
@@ -146,7 +146,7 @@ export function useContracts() {
     try {
       const { publicClient } = await getClients();
       const balance = await getTokenBalance(
-        publicClient as any,
+        publicClient,
         tokenAddress,
         activeWallet.address as Address
       );
@@ -173,7 +173,7 @@ export function useContracts() {
     try {
       const { publicClient } = await getClients();
       const position = await getUserPosition(
-        publicClient as any,
+        publicClient,
         registryAddress,
         cid,
         activeWallet.address as Address
@@ -196,7 +196,7 @@ export function useContracts() {
     try {
       const { publicClient } = await getClients();
       const aggregate = await getMemoryAggregate(
-        publicClient as any,
+        publicClient,
         registryAddress,
         cid
       );

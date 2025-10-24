@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Search, Bell, ArrowUp, MessageCircle, Bookmark, Square, Edit } from "lucide-react";
 import MarkdownRenderer from "@/components/forum/markdown-renderer";
 import { useAuth } from "@/context/auth-context";
+import type { ForumPost } from "@/types/forum";
 import TokenBalance from "@/components/dao/token-balance";
 import SignalButton from "@/components/forum/signal-button";
 
@@ -25,9 +26,9 @@ export default function PostDetailPage({ params }: PageParams) {
     postId: string;
   } | null>(null);
 
-  const [post, setPost] = useState<any>(null);
-  const [dao, setDao] = useState<any>(null);
-  const [comments, setComments] = useState<any[]>([]);
+  const [post, setPost] = useState<ForumPost | null>(null);
+  const [dao, setDao] = useState<ForumPost | null>(null);
+  const [comments, setComments] = useState<ForumPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [replyText, setReplyText] = useState("");
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
@@ -63,13 +64,13 @@ export default function PostDetailPage({ params }: PageParams) {
 
       // Find the specific post
       const currentPost = contentsData.find(
-        (c: any) => c._id === resolvedParams.postId
+        (c: ForumPost) => c._id === resolvedParams.postId
       );
       setPost(currentPost);
 
       // Find all comments for this post (based on rootId or parentId)
       const postComments = contentsData.filter(
-        (c: any) =>
+        (c: ForumPost) =>
           c.type === "comment" &&
           (c.rootId === resolvedParams.postId ||
             c.parentId === resolvedParams.postId)
@@ -225,7 +226,7 @@ export default function PostDetailPage({ params }: PageParams) {
                   userSignal={
                     authState.walletAddress
                       ? post.userSignals?.find(
-                          (s: any) => s.userId === authState.walletAddress
+                          (s) => s.userId === authState.walletAddress
                         )?.amount
                       : undefined
                   }
@@ -265,7 +266,7 @@ export default function PostDetailPage({ params }: PageParams) {
                   userSignal={
                     authState.walletAddress
                       ? post.userSignals?.find(
-                          (s: any) => s.userId === authState.walletAddress
+                          (s) => s.userId === authState.walletAddress
                         )?.amount
                       : undefined
                   }
@@ -361,7 +362,7 @@ export default function PostDetailPage({ params }: PageParams) {
                               userSignal={
                                 authState.walletAddress
                                   ? comment.userSignals?.find(
-                                      (s: any) => s.userId === authState.walletAddress
+                                      (s) => s.userId === authState.walletAddress
                                     )?.amount
                                   : undefined
                               }

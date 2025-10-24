@@ -23,6 +23,30 @@ export interface SignalResult {
   totalQuadAfter: bigint;
 }
 
+// Type for positions() return value
+interface PositionData {
+  rawAmount?: bigint;
+  sqrtWeight?: bigint;
+  0?: bigint;
+  1?: bigint;
+}
+
+// Type for getMemoryByHash() return value
+interface MemoryAggregate {
+  cid?: string;
+  dao?: Address;
+  totalRaw?: bigint;
+  totalQuadWeight?: bigint;
+  supporters?: number;
+  exists?: boolean;
+  0?: string;
+  1?: Address;
+  2?: bigint;
+  3?: bigint;
+  4?: number;
+  5?: boolean;
+}
+
 /**
  * Place tokens on content (signal support)
  */
@@ -98,8 +122,8 @@ export async function placeSignal(
   // Parse the struct/tuple results
   // positions returns { rawAmount, sqrtWeight } or [rawAmount, sqrtWeight]
   // getMemoryByHash returns { cid, dao, totalRaw, totalQuadWeight, supporters, exists }
-  const positionData = userPosition as any;
-  const memoryStruct = memoryData as any;
+  const positionData = userPosition as PositionData;
+  const memoryStruct = memoryData as MemoryAggregate;
 
   const result = {
     txHash: hash,
@@ -174,8 +198,8 @@ export async function withdrawSignal(
   // Parse the struct/tuple results
   // positions returns { rawAmount, sqrtWeight } or [rawAmount, sqrtWeight]
   // getMemoryByHash returns { cid, dao, totalRaw, totalQuadWeight, supporters, exists }
-  const positionData = userPosition as any;
-  const memoryStruct = memoryData as any;
+  const positionData = userPosition as PositionData;
+  const memoryStruct = memoryData as MemoryAggregate;
 
   const result = {
     txHash: hash,
@@ -214,9 +238,11 @@ export async function getUserPosition(
     args: [cidHash as `0x${string}`, userAddress],
   });
 
+  const positionData = result as PositionData;
+
   return {
-    rawAmount: result as any[0] as bigint,
-    sqrtWeight: result as any[1] as bigint,
+    rawAmount: BigInt(positionData.rawAmount || positionData[0] || 0),
+    sqrtWeight: BigInt(positionData.sqrtWeight || positionData[1] || 0),
   };
 }
 
@@ -249,13 +275,15 @@ export async function getMemoryAggregate(
     args: [cidHash as `0x${string}`],
   });
 
+  const memoryData = result as MemoryAggregate;
+
   return {
-    cid: result as any[0] as string,
-    dao: result as any[1] as Address,
-    totalRaw: result as any[2] as bigint,
-    totalQuadWeight: result as any[3] as bigint,
-    supporters: Number(result as any[4]),
-    exists: result as any[5] as boolean,
+    cid: (memoryData.cid || memoryData[0] || "") as string,
+    dao: (memoryData.dao || memoryData[1] || "0x0") as Address,
+    totalRaw: BigInt(memoryData.totalRaw || memoryData[2] || 0),
+    totalQuadWeight: BigInt(memoryData.totalQuadWeight || memoryData[3] || 0),
+    supporters: Number(memoryData.supporters || memoryData[4] || 0),
+    exists: Boolean(memoryData.exists ?? memoryData[5] ?? false),
   };
 }
 

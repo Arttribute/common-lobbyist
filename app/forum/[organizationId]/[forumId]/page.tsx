@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useAuth } from "@/context/auth-context";
 import TokenBalance from "@/components/dao/token-balance";
 import SignalButton from "@/components/forum/signal-button";
+import type { Forum, Organization, ForumPost } from "@/types/forum";
 
 interface PageParams {
   params: Promise<{
@@ -22,9 +23,9 @@ export default function ForumPage({ params }: PageParams) {
     forumId: string;
   } | null>(null);
 
-  const [forum, setForum] = useState<any>(null);
-  const [dao, setDao] = useState<any>(null);
-  const [posts, setPosts] = useState<any[]>([]);
+  const [forum, setForum] = useState<Forum | null>(null);
+  const [dao, setDao] = useState<Organization | null>(null);
+  const [posts, setPosts] = useState<ForumPost[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -56,7 +57,7 @@ export default function ForumPage({ params }: PageParams) {
       );
       const forums = await forumRes.json();
       const currentForum = forums.find(
-        (f: any) => f._id === resolvedParams.forumId
+        (f: Forum) => f._id === resolvedParams.forumId
       );
       setForum(currentForum);
 
@@ -65,7 +66,7 @@ export default function ForumPage({ params }: PageParams) {
         `/api/organization/forums/contents?forumId=${resolvedParams.forumId}`
       );
       const contentsData = await contentsRes.json();
-      const postsOnly = contentsData.filter((c: any) => c.type === "post");
+      const postsOnly = contentsData.filter((c: ForumPost) => c.type === "post");
       setPosts(postsOnly);
     } catch (error) {
       console.error("Error fetching forum data:", error);
@@ -187,7 +188,7 @@ export default function ForumPage({ params }: PageParams) {
                             userSignal={
                               authState.walletAddress
                                 ? post.userSignals?.find(
-                                    (s: any) => s.userId === authState.walletAddress
+                                    (s) => s.userId === authState.walletAddress
                                   )?.amount
                                 : undefined
                             }
