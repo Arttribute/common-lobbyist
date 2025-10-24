@@ -1,0 +1,2 @@
+# Exclude Hardhat development files from Vercel deployment
+onchain/
