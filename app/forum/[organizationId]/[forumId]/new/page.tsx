@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Square } from "lucide-react";
 import ContentEditor, { ContentData } from "@/components/forum/content-editor";
+import { useAuth } from "@/context/auth-context";
 
 interface PageParams {
   params: Promise<{
@@ -16,6 +17,7 @@ interface PageParams {
 
 export default function NewPostPage({ params }: PageParams) {
   const router = useRouter();
+  const { authenticated, authState, login } = useAuth();
   const [resolvedParams, setResolvedParams] = useState<{
     organizationId: string;
     forumId: string;
@@ -30,6 +32,13 @@ export default function NewPostPage({ params }: PageParams) {
   const handleCreateContent = async (data: ContentData) => {
     if (!resolvedParams) return;
 
+    // Check authentication
+    if (!authenticated) {
+      alert("Please login to create content");
+      await login();
+      return;
+    }
+
     try {
       setIsSubmitting(true);
       const payload = {
@@ -37,12 +46,15 @@ export default function NewPostPage({ params }: PageParams) {
         daoId: resolvedParams.organizationId,
         type: contentType,
         content: data,
-        authorId: "temp-user-id", // Replace with actual user ID from auth
+        authorId: authState.walletAddress || authState.username || "anonymous",
       };
 
       const res = await fetch("/api/organization/forums/contents", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${authState.idToken}`,
+        },
         body: JSON.stringify(payload),
       });
 

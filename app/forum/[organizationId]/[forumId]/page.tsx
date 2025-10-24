@@ -4,6 +4,9 @@
 import { useEffect, useState } from "react";
 import { Search, Bell, Square, Edit, ArrowUp, MessageCircle, Bookmark } from "lucide-react";
 import Link from "next/link";
+import { useAuth } from "@/context/auth-context";
+import TokenBalance from "@/components/dao/token-balance";
+import SignalButton from "@/components/forum/signal-button";
 
 interface PageParams {
   params: Promise<{
@@ -13,12 +16,14 @@ interface PageParams {
 }
 
 export default function ForumPage({ params }: PageParams) {
+  const { authState } = useAuth();
   const [resolvedParams, setResolvedParams] = useState<{
     organizationId: string;
     forumId: string;
   } | null>(null);
 
   const [forum, setForum] = useState<any>(null);
+  const [dao, setDao] = useState<any>(null);
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -37,6 +42,13 @@ export default function ForumPage({ params }: PageParams) {
 
     try {
       setLoading(true);
+
+      // Fetch DAO details
+      const daoRes = await fetch(
+        `/api/organization/${resolvedParams.organizationId}`
+      );
+      const daoData = await daoRes.json();
+      setDao(daoData);
 
       // Fetch forum details
       const forumRes = await fetch(
@@ -91,6 +103,7 @@ export default function ForumPage({ params }: PageParams) {
           </div>
 
           <div className="flex items-center gap-6">
+            {dao && <TokenBalance organizationId={dao._id} compact />}
             <Link
               href={`/forum/${resolvedParams.organizationId}/${resolvedParams.forumId}/new`}
               className="flex items-center gap-2 text-sm text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white"
@@ -135,7 +148,9 @@ export default function ForumPage({ params }: PageParams) {
                       <div className="flex-1">
                         <div className="flex items-center gap-2 text-sm">
                           <span className="font-medium text-neutral-900 dark:text-neutral-100">
-                            User {post.authorId.slice(0, 8)}
+                            {post.authorId.length > 20
+                              ? `${post.authorId.slice(0, 6)}...${post.authorId.slice(-4)}`
+                              : post.authorId}
                           </span>
                           <span className="text-neutral-500">·</span>
                           <span className="text-neutral-500">
@@ -162,14 +177,37 @@ export default function ForumPage({ params }: PageParams) {
 
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4">
-                        <button className="flex items-center gap-2 text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors">
-                          <ArrowUp className="w-6 h-6" />
-                          <span className="text-sm">24</span>
-                        </button>
-                        <button className="flex items-center gap-2 text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors">
+                        {dao?.onchain?.registry && dao?.onchain?.token ? (
+                          <SignalButton
+                            contentId={post._id}
+                            daoId={dao._id}
+                            registryAddress={dao.onchain.registry}
+                            tokenAddress={dao.onchain.token}
+                            currentSignals={post.onchain?.totalRaw || post.counters?.placedRaw || "0"}
+                            userSignal={
+                              authState.walletAddress
+                                ? post.userSignals?.find(
+                                    (s: any) => s.userId === authState.walletAddress
+                                  )?.amount
+                                : undefined
+                            }
+                            onSignalComplete={fetchForumData}
+                          />
+                        ) : (
+                          <button className="flex items-center gap-2 text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors">
+                            <ArrowUp className="w-6 h-6" />
+                            <span className="text-sm">
+                              {post.counters?.placedRaw || "0"}
+                            </span>
+                          </button>
+                        )}
+                        <Link
+                          href={`/forum/${resolvedParams.organizationId}/${resolvedParams.forumId}/post/${post._id}`}
+                          className="flex items-center gap-2 text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors"
+                        >
                           <MessageCircle className="w-6 h-6" />
-                          <span className="text-sm">5</span>
-                        </button>
+                          <span className="text-sm">{post.counters?.replies || 0}</span>
+                        </Link>
                       </div>
                       <button className="text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors">
                         <Bookmark className="w-6 h-6" />

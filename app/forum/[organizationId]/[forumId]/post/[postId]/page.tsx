@@ -5,6 +5,9 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Search, Bell, ArrowUp, MessageCircle, Bookmark, Square, Edit } from "lucide-react";
 import MarkdownRenderer from "@/components/forum/markdown-renderer";
+import { useAuth } from "@/context/auth-context";
+import TokenBalance from "@/components/dao/token-balance";
+import SignalButton from "@/components/forum/signal-button";
 
 interface PageParams {
   params: Promise<{
@@ -15,6 +18,7 @@ interface PageParams {
 }
 
 export default function PostDetailPage({ params }: PageParams) {
+  const { authenticated, authState, login } = useAuth();
   const [resolvedParams, setResolvedParams] = useState<{
     organizationId: string;
     forumId: string;
@@ -22,6 +26,7 @@ export default function PostDetailPage({ params }: PageParams) {
   } | null>(null);
 
   const [post, setPost] = useState<any>(null);
+  const [dao, setDao] = useState<any>(null);
   const [comments, setComments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [replyText, setReplyText] = useState("");
@@ -42,6 +47,13 @@ export default function PostDetailPage({ params }: PageParams) {
 
     try {
       setLoading(true);
+
+      // Fetch DAO details
+      const daoRes = await fetch(
+        `/api/organization/${resolvedParams.organizationId}`
+      );
+      const daoData = await daoRes.json();
+      setDao(daoData);
 
       // Fetch all contents for this forum
       const contentsRes = await fetch(
@@ -73,19 +85,29 @@ export default function PostDetailPage({ params }: PageParams) {
   const handleReply = async (parentId: string | null = null) => {
     if (!resolvedParams || !replyText.trim()) return;
 
+    // Check authentication
+    if (!authenticated) {
+      alert("Please login to comment");
+      await login();
+      return;
+    }
+
     try {
       const payload = {
         forumId: resolvedParams.forumId,
         daoId: resolvedParams.organizationId,
         type: "comment",
         content: { text: replyText },
-        authorId: "temp-user-id", // Replace with actual user ID
+        authorId: authState.walletAddress || authState.username || "anonymous",
         parentId: parentId || resolvedParams.postId,
       };
 
       const res = await fetch("/api/organization/forums/contents", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${authState.idToken}`,
+        },
         body: JSON.stringify(payload),
       });
 
@@ -143,6 +165,7 @@ export default function PostDetailPage({ params }: PageParams) {
           </div>
 
           <div className="flex items-center gap-6">
+            {dao && <TokenBalance organizationId={dao._id} compact />}
             <Link
               href={`/forum/${resolvedParams.organizationId}/${resolvedParams.forumId}/new`}
               className="flex items-center gap-2 text-sm text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white"
@@ -192,10 +215,28 @@ export default function PostDetailPage({ params }: PageParams) {
           {/* Post Actions Bar */}
           <div className="flex items-center justify-between mb-8 pb-8 border-b border-neutral-200 dark:border-neutral-800">
             <div className="flex items-center gap-4">
-              <button className="flex items-center gap-2 text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors">
-                <ArrowUp className="w-6 h-6" />
-                <span className="text-sm">24</span>
-              </button>
+              {dao?.onchain?.registry && dao?.onchain?.token ? (
+                <SignalButton
+                  contentId={post._id}
+                  daoId={dao._id}
+                  registryAddress={dao.onchain.registry}
+                  tokenAddress={dao.onchain.token}
+                  currentSignals={post.onchain?.totalRaw || post.counters?.placedRaw || "0"}
+                  userSignal={
+                    authState.walletAddress
+                      ? post.userSignals?.find(
+                          (s: any) => s.userId === authState.walletAddress
+                        )?.amount
+                      : undefined
+                  }
+                  onSignalComplete={fetchPostData}
+                />
+              ) : (
+                <button className="flex items-center gap-2 text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors">
+                  <ArrowUp className="w-6 h-6" />
+                  <span className="text-sm">{post.counters?.placedRaw || "0"}</span>
+                </button>
+              )}
               <button className="flex items-center gap-2 text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors">
                 <MessageCircle className="w-6 h-6" />
                 <span className="text-sm">{comments.length}</span>
@@ -214,10 +255,28 @@ export default function PostDetailPage({ params }: PageParams) {
           {/* Claps and Actions Footer */}
           <div className="flex items-center justify-between py-8 border-t border-neutral-200 dark:border-neutral-800 mb-12">
             <div className="flex items-center gap-4">
-              <button className="flex items-center gap-2 text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors">
-                <ArrowUp className="w-6 h-6" />
-                <span className="text-sm">24</span>
-              </button>
+              {dao?.onchain?.registry && dao?.onchain?.token ? (
+                <SignalButton
+                  contentId={post._id}
+                  daoId={dao._id}
+                  registryAddress={dao.onchain.registry}
+                  tokenAddress={dao.onchain.token}
+                  currentSignals={post.onchain?.totalRaw || post.counters?.placedRaw || "0"}
+                  userSignal={
+                    authState.walletAddress
+                      ? post.userSignals?.find(
+                          (s: any) => s.userId === authState.walletAddress
+                        )?.amount
+                      : undefined
+                  }
+                  onSignalComplete={fetchPostData}
+                />
+              ) : (
+                <button className="flex items-center gap-2 text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors">
+                  <ArrowUp className="w-6 h-6" />
+                  <span className="text-sm">{post.counters?.placedRaw || "0"}</span>
+                </button>
+              )}
               <button className="flex items-center gap-2 text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors">
                 <MessageCircle className="w-6 h-6" />
                 <span className="text-sm">{comments.length}</span>
@@ -292,10 +351,28 @@ export default function PostDetailPage({ params }: PageParams) {
                           <MarkdownRenderer content={comment.content.text} />
                         </div>
                         <div className="flex items-center gap-4">
-                          <button className="flex items-center gap-2 text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors text-sm">
-                            <ArrowUp className="w-4 h-4" />
-                            <span>12</span>
-                          </button>
+                          {dao?.onchain?.registry && dao?.onchain?.token ? (
+                            <SignalButton
+                              contentId={comment._id}
+                              daoId={dao._id}
+                              registryAddress={dao.onchain.registry}
+                              tokenAddress={dao.onchain.token}
+                              currentSignals={comment.onchain?.totalRaw || comment.counters?.placedRaw || "0"}
+                              userSignal={
+                                authState.walletAddress
+                                  ? comment.userSignals?.find(
+                                      (s: any) => s.userId === authState.walletAddress
+                                    )?.amount
+                                  : undefined
+                              }
+                              onSignalComplete={fetchPostData}
+                            />
+                          ) : (
+                            <button className="flex items-center gap-2 text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors text-sm">
+                              <ArrowUp className="w-4 h-4" />
+                              <span>{comment.counters?.placedRaw || "0"}</span>
+                            </button>
+                          )}
                           <button
                             onClick={() => setReplyingTo(comment._id)}
                             className="text-sm text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors"

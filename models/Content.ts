@@ -44,6 +44,16 @@ const ContentSchema = new mongoose.Schema(
       supporters: { type: Number, default: 0 }, // Number of unique supporters
     },
 
+    // Individual user signals - tracks how much each user has placed
+    userSignals: [
+      {
+        userId: { type: String, required: true }, // wallet address or user ID
+        amount: { type: String, required: true }, // amount of tokens placed (as string for BigInt)
+        placedAt: { type: Date, default: () => new Date() },
+        lastUpdatedAt: { type: Date, default: () => new Date() },
+      },
+    ],
+
     embeddings: {
       model: { type: String },
       vector: { type: [Number], index: "2dsphere" }, // Atlas will override to vector index

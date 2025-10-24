@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import ForumCard from "@/components/forum-card";
+import TokenBalance from "@/components/dao/token-balance";
 
 interface PageParams {
   params: Promise<{
@@ -42,7 +43,7 @@ export default function OrganizationPage({ params }: PageParams) {
 
       // Fetch organization
       const orgRes = await fetch(
-        `/api/organization?organizationId=${resolvedParams.organizationId}`
+        `/api/organization/${resolvedParams.organizationId}`
       );
       const orgData = await orgRes.json();
       setOrganization(orgData);
@@ -142,6 +143,43 @@ export default function OrganizationPage({ params }: PageParams) {
               New Forum
             </button>
           </div>
+
+          {/* Token Balance Display */}
+          {organization && (
+            <div className="mt-8">
+              <TokenBalance organizationId={organization._id} />
+            </div>
+          )}
+
+          {/* DAO Info */}
+          {organization?.onchain && (
+            <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="p-4 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
+                <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                  Token
+                </p>
+                <p className="text-sm font-mono text-neutral-900 dark:text-neutral-100">
+                  {organization.tokenSymbol}
+                </p>
+              </div>
+              <div className="p-4 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
+                <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                  Chain
+                </p>
+                <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                  Base Sepolia
+                </p>
+              </div>
+              <div className="p-4 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
+                <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">
+                  Total Supply
+                </p>
+                <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                  {parseFloat(organization.initialSupply).toLocaleString()}
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       </section>
 

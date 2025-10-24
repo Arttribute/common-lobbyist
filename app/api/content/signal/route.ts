@@ -29,10 +29,16 @@ export async function POST(request: NextRequest) {
       totalQuadWeight,
       supporters,
       txHash,
+      userAmount, // Amount placed/withdrawn by this specific user
     } = body;
 
     // Validate required fields
-    if (!contentId || !daoId || totalRaw === undefined || totalQuadWeight === undefined) {
+    if (
+      !contentId ||
+      !daoId ||
+      totalRaw === undefined ||
+      totalQuadWeight === undefined
+    ) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
@@ -79,6 +85,44 @@ export async function POST(request: NextRequest) {
       placedRaw: totalRaw.toString(),
       qWeight: totalQuadWeight.toString(),
     };
+
+    // Update user-specific signal if userAmount is provided
+    if (userAmount !== undefined && user.walletAddress) {
+      const userId = user.walletAddress;
+      const existingSignalIndex = content.userSignals?.findIndex(
+        (s: any) => s.userId === userId
+      );
+
+      const newAmount = userAmount.toString();
+      const isWithdrawal = newAmount.startsWith("-");
+      const absoluteAmount = isWithdrawal ? newAmount.slice(1) : newAmount;
+
+      if (existingSignalIndex !== undefined && existingSignalIndex >= 0) {
+        // Update existing signal
+        const currentAmount = BigInt(
+          content.userSignals[existingSignalIndex].amount || "0"
+        );
+        const changeAmount = BigInt(absoluteAmount);
+        const updatedAmount = isWithdrawal
+          ? currentAmount - changeAmount
+          : currentAmount + changeAmount;
+
+        content.userSignals[existingSignalIndex].amount =
+          updatedAmount.toString();
+        content.userSignals[existingSignalIndex].lastUpdatedAt = new Date();
+      } else if (!isWithdrawal) {
+        // Add new signal (only if not a withdrawal)
+        if (!content.userSignals) {
+          content.userSignals = [];
+        }
+        content.userSignals.push({
+          userId,
+          amount: absoluteAmount,
+          placedAt: new Date(),
+          lastUpdatedAt: new Date(),
+        });
+      }
+    }
 
     content.lastActivityAt = new Date();
 

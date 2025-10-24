@@ -3,6 +3,7 @@
 
 import { useState } from "react";
 import MarkdownRenderer from "./markdown-renderer";
+import SignalButton from "./signal-button";
 
 interface ContentCardProps {
   content: {
@@ -23,16 +24,33 @@ interface ContentCardProps {
       placedRaw: string;
       qWeight: string;
     };
+    onchain?: {
+      totalRaw: string;
+      totalQuadWeight: string;
+    };
+    userSignals?: Array<{
+      userId: string;
+      amount: string;
+    }>;
     depth: number;
+    daoId?: string;
   };
+  registryAddress?: string;
+  tokenAddress?: string;
+  currentUserId?: string;
   onReply?: (contentId: string, replyText: string) => void;
+  onSignalComplete?: () => void;
   showReplies?: boolean;
   compact?: boolean;
 }
 
 export default function ContentCard({
   content,
+  registryAddress,
+  tokenAddress,
+  currentUserId,
   onReply,
+  onSignalComplete,
   showReplies = true,
   compact = false,
 }: ContentCardProps) {
@@ -78,7 +96,9 @@ export default function ContentCard({
         <div>
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
-              {content.authorId.slice(0, 8)}...
+              {content.authorId.length > 20
+                ? `${content.authorId.slice(0, 6)}...${content.authorId.slice(-4)}`
+                : content.authorId}
             </span>
           </div>
           <div className="flex items-center gap-1 text-sm text-neutral-500">
@@ -103,13 +123,37 @@ export default function ContentCard({
       {/* Actions */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          {/* Clap button */}
-          <button className="flex items-center gap-2 text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100">
-            <svg width="24" height="24" viewBox="0 0 24 24" className="fill-none stroke-current">
-              <path d="M11.37.83L12 3.28l.63-2.45h-1.26zM13.92 3.95l1.52-2.1-1.18-.4-.34 2.5zM8.59 1.84l1.52 2.11-.34-2.5-1.18.4zM18.52 18.92a4.23 4.23 0 0 1-2.62 1.33l.41-.37c2.39-2.4 2.86-4.95 1.4-7.63l-.91-1.6-.8-1.67c-.25-.56-.19-.98.21-1.29a.7.7 0 0 1 .55-.13c.28.05.54.23.72.5l2.37 4.16c.97 1.62 1.14 4.23-1.33 6.7zm-11-.44l-4.15-4.15a.83.83 0 0 1 1.17-1.17l2.16 2.16a.37.37 0 0 0 .51-.52l-2.15-2.16L3.6 11.2a.83.83 0 0 1 1.17-1.17l3.43 3.44a.36.36 0 0 0 .52 0 .36.36 0 0 0 0-.52L5.29 9.51l-.97-.97a.83.83 0 0 1 0-1.16.84.84 0 0 1 1.17 0l.97.97 3.44 3.43a.36.36 0 0 0 .51 0 .37.37 0 0 0 0-.52L6.98 7.83a.82.82 0 0 1-.18-.9.82.82 0 0 1 .76-.51c.22 0 .43.09.58.24l5.8 5.79a.37.37 0 0 0 .58-.42L13.4 9.67c-.26-.56-.2-.98.2-1.29a.7.7 0 0 1 .55-.13c.28.05.55.23.73.5l2.2 3.86c1.3 2.38.87 4.59-1.29 6.75a4.65 4.65 0 0 1-4.19 1.37 7.73 7.73 0 0 1-4.07-2.25z"></path>
-            </svg>
-            <span className="text-sm">{content.counters.placedRaw || "0"}</span>
-          </button>
+          {/* Signal button */}
+          {registryAddress && tokenAddress && content.daoId ? (
+            <SignalButton
+              contentId={content._id}
+              daoId={content.daoId}
+              registryAddress={registryAddress}
+              tokenAddress={tokenAddress}
+              currentSignals={content.onchain?.totalRaw || content.counters.placedRaw || "0"}
+              userSignal={
+                currentUserId
+                  ? content.userSignals?.find((s) => s.userId === currentUserId)
+                      ?.amount
+                  : undefined
+              }
+              onSignalComplete={onSignalComplete}
+            />
+          ) : (
+            <button className="flex items-center gap-2 text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100">
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                className="fill-none stroke-current"
+              >
+                <path d="M11.37.83L12 3.28l.63-2.45h-1.26zM13.92 3.95l1.52-2.1-1.18-.4-.34 2.5zM8.59 1.84l1.52 2.11-.34-2.5-1.18.4zM18.52 18.92a4.23 4.23 0 0 1-2.62 1.33l.41-.37c2.39-2.4 2.86-4.95 1.4-7.63l-.91-1.6-.8-1.67c-.25-.56-.19-.98.21-1.29a.7.7 0 0 1 .55-.13c.28.05.54.23.72.5l2.37 4.16c.97 1.62 1.14 4.23-1.33 6.7zm-11-.44l-4.15-4.15a.83.83 0 0 1 1.17-1.17l2.16 2.16a.37.37 0 0 0 .51-.52l-2.15-2.16L3.6 11.2a.83.83 0 0 1 1.17-1.17l3.43 3.44a.36.36 0 0 0 .52 0 .36.36 0 0 0 0-.52L5.29 9.51l-.97-.97a.83.83 0 0 1 0-1.16.84.84 0 0 1 1.17 0l.97.97 3.44 3.43a.36.36 0 0 0 .51 0 .37.37 0 0 0 0-.52L6.98 7.83a.82.82 0 0 1-.18-.9.82.82 0 0 1 .76-.51c.22 0 .43.09.58.24l5.8 5.79a.37.37 0 0 0 .58-.42L13.4 9.67c-.26-.56-.2-.98.2-1.29a.7.7 0 0 1 .55-.13c.28.05.55.23.73.5l2.2 3.86c1.3 2.38.87 4.59-1.29 6.75a4.65 4.65 0 0 1-4.19 1.37 7.73 7.73 0 0 1-4.07-2.25z"></path>
+              </svg>
+              <span className="text-sm">
+                {content.counters.placedRaw || "0"}
+              </span>
+            </button>
+          )}
 
           {/* Reply button */}
           {showReplies && (

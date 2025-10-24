@@ -58,60 +58,37 @@ export async function placeSignal(
   const hash = await walletClient.writeContract(request);
   const receipt = await publicClient.waitForTransactionReceipt({ hash });
 
-  if (receipt.status !== "success") {
-    throw new Error(`Signal transaction failed. Hash: ${hash}`);
+  // Parse the Signaled event
+  const signaledEvent = receipt.logs.find((log) => {
+    try {
+      const decoded = (publicClient as any).parseEventLogs({
+        abi: SignalRegistryAbi,
+        logs: [log],
+        eventName: "Signaled",
+      });
+      return decoded.length > 0;
+    } catch {
+      return false;
+    }
+  });
+
+  if (!signaledEvent) {
+    throw new Error("Signaled event not found in transaction receipt");
   }
 
-  console.log("Signal transaction successful:", hash);
-
-  // Read the state after transaction to get updated values
-  const cidHash = await publicClient.readContract({
-    address: params.registryAddress,
+  const parsedEvent = (publicClient as any).parseEventLogs({
     abi: SignalRegistryAbi,
-    functionName: "cidHashOf",
-    args: [params.cid],
-  });
+    logs: [signaledEvent],
+    eventName: "Signaled",
+  })[0];
 
-  console.log("CID hash:", cidHash);
-  console.log("Reading position for user:", walletClient.account!.address);
-
-  // Get user's position
-  const userPosition = await publicClient.readContract({
-    address: params.registryAddress,
-    abi: SignalRegistryAbi,
-    functionName: "positions",
-    args: [cidHash as `0x${string}`, walletClient.account!.address],
-  });
-
-  console.log("User position:", userPosition);
-
-  // Get memory aggregate
-  const memoryData = await publicClient.readContract({
-    address: params.registryAddress,
-    abi: SignalRegistryAbi,
-    functionName: "getMemoryByHash",
-    args: [cidHash as `0x${string}`],
-  });
-
-  console.log("Memory data:", memoryData);
-
-  // Parse the struct/tuple results
-  // positions returns { rawAmount, sqrtWeight } or [rawAmount, sqrtWeight]
-  // getMemoryByHash returns { cid, dao, totalRaw, totalQuadWeight, supporters, exists }
-  const positionData = userPosition as any;
-  const memoryStruct = memoryData as any;
-
-  const result = {
+  return {
     txHash: hash,
-    userRawAfter: BigInt(positionData.rawAmount || positionData[0] || 0),
-    userSqrtAfter: BigInt(positionData.sqrtWeight || positionData[1] || 0),
-    totalRawAfter: BigInt(memoryStruct.totalRaw || memoryStruct[2] || 0),
-    totalQuadAfter: BigInt(memoryStruct.totalQuadWeight || memoryStruct[3] || 0),
+    userRawAfter: parsedEvent.args.userRawAfter as bigint,
+    userSqrtAfter: parsedEvent.args.userSqrtAfter as bigint,
+    totalRawAfter: parsedEvent.args.totalRawAfter as bigint,
+    totalQuadAfter: parsedEvent.args.totalQuadAfter as bigint,
   };
-
-  console.log("Returning result:", result);
-
-  return result;
 }
 
 /**
@@ -135,59 +112,37 @@ export async function withdrawSignal(
   const hash = await walletClient.writeContract(request);
   const receipt = await publicClient.waitForTransactionReceipt({ hash });
 
-  if (receipt.status !== "success") {
-    throw new Error(`Withdraw transaction failed. Hash: ${hash}`);
+  // Parse the Withdrawn event
+  const withdrawnEvent = receipt.logs.find((log) => {
+    try {
+      const decoded = (publicClient as any).parseEventLogs({
+        abi: SignalRegistryAbi,
+        logs: [log],
+        eventName: "Withdrawn",
+      });
+      return decoded.length > 0;
+    } catch {
+      return false;
+    }
+  });
+
+  if (!withdrawnEvent) {
+    throw new Error("Withdrawn event not found in transaction receipt");
   }
 
-  console.log("Withdraw transaction successful:", hash);
-
-  // Read the state after transaction to get updated values
-  const cidHash = await publicClient.readContract({
-    address: params.registryAddress,
+  const parsedEvent = (publicClient as any).parseEventLogs({
     abi: SignalRegistryAbi,
-    functionName: "cidHashOf",
-    args: [params.cid],
-  });
+    logs: [withdrawnEvent],
+    eventName: "Withdrawn",
+  })[0];
 
-  console.log("CID hash:", cidHash);
-
-  // Get user's position
-  const userPosition = await publicClient.readContract({
-    address: params.registryAddress,
-    abi: SignalRegistryAbi,
-    functionName: "positions",
-    args: [cidHash as `0x${string}`, walletClient.account!.address],
-  });
-
-  console.log("User position after withdraw:", userPosition);
-
-  // Get memory aggregate
-  const memoryData = await publicClient.readContract({
-    address: params.registryAddress,
-    abi: SignalRegistryAbi,
-    functionName: "getMemoryByHash",
-    args: [cidHash as `0x${string}`],
-  });
-
-  console.log("Memory data after withdraw:", memoryData);
-
-  // Parse the struct/tuple results
-  // positions returns { rawAmount, sqrtWeight } or [rawAmount, sqrtWeight]
-  // getMemoryByHash returns { cid, dao, totalRaw, totalQuadWeight, supporters, exists }
-  const positionData = userPosition as any;
-  const memoryStruct = memoryData as any;
-
-  const result = {
+  return {
     txHash: hash,
-    userRawAfter: BigInt(positionData.rawAmount || positionData[0] || 0),
-    userSqrtAfter: BigInt(positionData.sqrtWeight || positionData[1] || 0),
-    totalRawAfter: BigInt(memoryStruct.totalRaw || memoryStruct[2] || 0),
-    totalQuadAfter: BigInt(memoryStruct.totalQuadWeight || memoryStruct[3] || 0),
+    userRawAfter: parsedEvent.args.userRawAfter as bigint,
+    userSqrtAfter: parsedEvent.args.userSqrtAfter as bigint,
+    totalRawAfter: parsedEvent.args.totalRawAfter as bigint,
+    totalQuadAfter: parsedEvent.args.totalQuadAfter as bigint,
   };
-
-  console.log("Returning withdraw result:", result);
-
-  return result;
 }
 
 /**

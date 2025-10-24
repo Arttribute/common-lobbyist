@@ -29,13 +29,23 @@ interface Content {
 
 interface ContentListProps {
   contents: Content[];
+  registryAddress?: string;
+  tokenAddress?: string;
+  currentUserId?: string;
+  daoId?: string;
   onReply?: (contentId: string, replyText: string) => void;
+  onSignalComplete?: () => void;
   showNested?: boolean;
 }
 
 export default function ContentList({
   contents,
+  registryAddress,
+  tokenAddress,
+  currentUserId,
+  daoId,
   onReply,
+  onSignalComplete,
   showNested = true,
 }: ContentListProps) {
   const [expandedPosts, setExpandedPosts] = useState<Set<string>>(new Set());
@@ -81,8 +91,12 @@ export default function ContentList({
           <div key={post._id} className="space-y-3">
             <div onClick={() => togglePost(post._id)} className="cursor-pointer">
               <ContentCard
-                content={post}
+                content={{ ...post, daoId }}
+                registryAddress={registryAddress}
+                tokenAddress={tokenAddress}
+                currentUserId={currentUserId}
                 onReply={onReply}
+                onSignalComplete={onSignalComplete}
                 showReplies={true}
                 compact={!isExpanded}
               />
@@ -94,8 +108,12 @@ export default function ContentList({
                 {postComments.map((comment) => (
                   <ContentCard
                     key={comment._id}
-                    content={comment}
+                    content={{ ...comment, daoId }}
+                    registryAddress={registryAddress}
+                    tokenAddress={tokenAddress}
+                    currentUserId={currentUserId}
                     onReply={onReply}
+                    onSignalComplete={onSignalComplete}
                     showReplies={true}
                   />
                 ))}
