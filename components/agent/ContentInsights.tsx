@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Sparkles, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
-import { useAuth } from "@/lib/auth/AuthContext";
+import { useAuth } from "@/context/auth-context";
 
 interface ContentInsightsProps {
   organizationId: string;
@@ -21,29 +21,25 @@ export default function ContentInsights({
   const [insights, setInsights] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedType, setSelectedType] = useState<InsightType>("alignment");
-  const { user } = useAuth();
+  const { authenticated } = useAuth();
 
   const getInsights = async (type: InsightType) => {
-    if (!user || !content.trim()) return;
+    if (!authenticated || !content.trim()) return;
 
     setIsLoading(true);
     setSelectedType(type);
 
     try {
-      const response = await fetch(
-        `/api/agent/${organizationId}/insights`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${user.token}`,
-          },
-          body: JSON.stringify({
-            content: content.trim(),
-            type,
-          }),
-        }
-      );
+      const response = await fetch(`/api/agent/${organizationId}/insights`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          content: content.trim(),
+          type,
+        }),
+      });
 
       if (!response.ok) {
         throw new Error("Failed to get insights");

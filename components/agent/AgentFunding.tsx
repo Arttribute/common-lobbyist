@@ -2,27 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { Wallet, Send, Loader2, AlertCircle, CheckCircle, Info, Droplets, ExternalLink } from "lucide-react";
-import { useAuth } from "@/lib/auth/AuthContext";
-import { useWriteContract, useWaitForTransactionReceipt, useAccount } from "wagmi";
-import { parseEther, Address } from "viem";
+import { useAuth } from "@/context/auth-context";
+import { Address } from "viem";
 import { useCommonToken } from "@/lib/hooks/use-common-token";
 import Link from "next/link";
-
-const COMMON_TOKEN_ADDRESS = "0x09d3e33fBeB985653bFE868eb5a62435fFA04e4F" as Address;
-
-// Minimal ERC20 ABI for transfer function
-const ERC20_ABI = [
-  {
-    name: "transfer",
-    type: "function",
-    stateMutability: "nonpayable",
-    inputs: [
-      { name: "to", type: "address" },
-      { name: "amount", type: "uint256" },
-    ],
-    outputs: [{ name: "", type: "bool" }],
-  },
-] as const;
 
 interface AgentFundingProps {
   organizationId: string;
@@ -45,45 +28,39 @@ export default function AgentFunding({
     type: "success" | "error" | "info";
     text: string;
   } | null>(null);
-  const { user } = useAuth();
-  const { address } = useAccount();
-  const { useCommonBalance } = useCommonToken();
-  const { balance: userCommonBalance, isLoading: isLoadingUserBalance } = useCommonBalance(address as Address);
+  const { authenticated, authState } = useAuth();
+  const { useCommonBalance, transferTokens, isTransferPending, transferHash, transferError } = useCommonToken();
 
-  const { writeContract, data: hash, isPending, error } = useWriteContract();
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
-    hash,
-  });
+  const userAddress = authState.walletAddress as Address | undefined;
+  const { balance: userCommonBalance, isLoading: isLoadingUserBalance } = useCommonBalance(userAddress);
+
+  const [lastTransferHash, setLastTransferHash] = useState<Address | null>(null);
 
   useEffect(() => {
     loadAgentBalance();
   }, [organizationId]);
 
+  // Handle successful transfer
   useEffect(() => {
-    if (isSuccess) {
+    if (transferHash && transferHash !== lastTransferHash && !isTransferPending) {
+      setLastTransferHash(transferHash);
       showMessage("success", "Tokens sent successfully!");
       setAmount("");
       loadAgentBalance();
     }
-  }, [isSuccess]);
+  }, [transferHash, isTransferPending, lastTransferHash]);
 
+  // Handle transfer errors
   useEffect(() => {
-    if (error) {
-      showMessage("error", error.message || "Transaction failed");
+    if (transferError) {
+      showMessage("error", transferError.message || "Transaction failed");
     }
-  }, [error]);
+  }, [transferError]);
 
   const loadAgentBalance = async () => {
     try {
       setIsLoadingBalance(true);
-      const response = await fetch(
-        `/api/agent/${organizationId}/balance`,
-        {
-          headers: {
-            Authorization: `Bearer ${user?.token}`,
-          },
-        }
-      );
+      const response = await fetch(`/api/agent/${organizationId}/balance`);
 
       if (response.ok) {
         const data = await response.json();
@@ -104,7 +81,7 @@ export default function AgentFunding({
   };
 
   const handleSend = async () => {
-    if (!user) {
+    if (!authenticated) {
       showMessage("error", "Please connect your wallet");
       return;
     }
@@ -120,13 +97,8 @@ export default function AgentFunding({
     }
 
     try {
-      // Send tokens using wagmi
-      writeContract({
-        address: COMMON_TOKEN_ADDRESS,
-        abi: ERC20_ABI,
-        functionName: "transfer",
-        args: [walletAddress as Address, parseEther(amount)],
-      });
+      // Send tokens using viem via useCommonToken hook
+      await transferTokens(walletAddress as Address, amount);
     } catch (error: any) {
       console.error("Error sending tokens:", error);
       showMessage("error", error.message || "Failed to send tokens");
@@ -346,13 +318,13 @@ export default function AgentFunding({
 
           <button
             onClick={handleSend}
-            disabled={!user || isPending || isConfirming || !amount}
+            disabled={!authenticated || isTransferPending || !amount}
             className="w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
           >
-            {isPending || isConfirming ? (
+            {isTransferPending ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                {isPending ? "Confirming..." : "Processing..."}
+                Processing transaction...
               </>
             ) : (
               <>
@@ -362,16 +334,16 @@ export default function AgentFunding({
             )}
           </button>
 
-          {hash && (
+          {transferHash && (
             <div className="text-xs text-gray-600 text-center">
               Transaction:{" "}
               <a
-                href={`https://basescan.org/tx/${hash}`}
+                href={`https://basescan.org/tx/${transferHash}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-blue-600 hover:underline font-mono"
               >
-                {hash.slice(0, 10)}...{hash.slice(-8)}
+                {transferHash.slice(0, 10)}...{transferHash.slice(-8)}
               </a>
             </div>
           )}

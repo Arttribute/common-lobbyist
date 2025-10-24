@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { MessageCircle, X, Send, Minimize2, Maximize2, Heart, Coins } from "lucide-react";
-import { useAuth } from "@/lib/auth/AuthContext";
+import { useAuth } from "@/context/auth-context";
 import AgentFunding from "./AgentFunding";
 
 interface Message {
@@ -30,7 +30,7 @@ export default function AgentChatWidget({
   const [balance, setBalance] = useState<number | null>(null);
   const [agentId, setAgentId] = useState<string>("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const { user } = useAuth();
+  const { authenticated, authState } = useAuth();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -41,21 +41,14 @@ export default function AgentChatWidget({
   }, [messages]);
 
   useEffect(() => {
-    if (isOpen && user) {
+    if (isOpen && authenticated) {
       loadAgentBalance();
     }
-  }, [isOpen, user]);
+  }, [isOpen, authenticated]);
 
   const loadAgentBalance = async () => {
     try {
-      const response = await fetch(
-        `/api/agent/${organizationId}/balance`,
-        {
-          headers: {
-            Authorization: `Bearer ${user?.token}`,
-          },
-        }
-      );
+      const response = await fetch(`/api/agent/${organizationId}/balance`);
 
       if (response.ok) {
         const data = await response.json();
@@ -68,7 +61,7 @@ export default function AgentChatWidget({
   };
 
   const sendMessage = async () => {
-    if (!input.trim() || isLoading || !user) return;
+    if (!input.trim() || isLoading || !authenticated) return;
 
     const userMessage: Message = {
       role: "user",
@@ -81,20 +74,16 @@ export default function AgentChatWidget({
     setIsLoading(true);
 
     try {
-      const response = await fetch(
-        `/api/agent/${organizationId}/chat`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${user.token}`,
-          },
-          body: JSON.stringify({
-            message: input,
-            sessionId,
-          }),
-        }
-      );
+      const response = await fetch(`/api/agent/${organizationId}/chat`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          message: input,
+          sessionId,
+        }),
+      });
 
       if (!response.ok) {
         throw new Error("Failed to send message");
@@ -308,7 +297,7 @@ export default function AgentChatWidget({
 
           {/* Input */}
           <div className="border-t border-gray-200 p-4">
-            {!user ? (
+            {!authenticated ? (
               <div className="text-center text-sm text-gray-500">
                 Please connect your wallet to chat
               </div>

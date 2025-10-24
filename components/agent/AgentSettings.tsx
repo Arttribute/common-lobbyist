@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Save, Loader2, Bot, AlertCircle, CheckCircle, Settings, Wallet } from "lucide-react";
-import { useAuth } from "@/lib/auth/AuthContext";
+import { useAuth } from "@/context/auth-context";
 import AgentFunding from "./AgentFunding";
 
 interface AgentSettingsProps {

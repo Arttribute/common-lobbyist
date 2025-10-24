@@ -2,40 +2,71 @@
 
 import { useState, useEffect } from "react";
 import { Droplets, Wallet, ArrowRight, Loader2, CheckCircle, AlertCircle, Info, Copy } from "lucide-react";
-import { useAccount, useBalance } from "wagmi";
+import { useAuth } from "@/context/auth-context";
 import { useCommonToken } from "@/lib/hooks/use-common-token";
-import { Address } from "viem";
+import { Address, createPublicClient, http, formatEther } from "viem";
+import { baseSepolia } from "viem/chains";
 
 export default function CommonTokenFaucet() {
-  const { address, isConnected } = useAccount();
-  const { useCommonBalance, getTokens, isBuyPending, isBuyConfirming, isBuySuccess, buyHash, calculateCommonAmount } = useCommonToken();
+  const { authenticated, authState } = useAuth();
+  const { useCommonBalance, getTokens, isBuyPending, buyHash, buyError, calculateCommonAmount } = useCommonToken();
 
+  const address = authState.walletAddress as Address | undefined;
   const { balance: commonBalance, refetch: refetchCommon } = useCommonBalance(address);
-  const { data: ethBalance } = useBalance({
-    address,
-  });
 
+  const [ethBalance, setEthBalance] = useState<string>("0");
   const [ethAmount, setEthAmount] = useState("0.001");
   const [message, setMessage] = useState<{
     type: "success" | "error" | "info";
     text: string;
   } | null>(null);
+  const [lastBuyHash, setLastBuyHash] = useState<Address | null>(null);
 
+  // Fetch ETH balance
   useEffect(() => {
-    if (isBuySuccess) {
+    const fetchEthBalance = async () => {
+      if (!address) return;
+
+      const publicClient = createPublicClient({
+        chain: baseSepolia,
+        transport: http(),
+      });
+
+      try {
+        const balance = await publicClient.getBalance({ address });
+        setEthBalance(formatEther(balance));
+      } catch (error) {
+        console.error("Error fetching ETH balance:", error);
+      }
+    };
+
+    fetchEthBalance();
+  }, [address]);
+
+  // Handle successful token purchase
+  useEffect(() => {
+    if (buyHash && buyHash !== lastBuyHash && !isBuyPending) {
+      setLastBuyHash(buyHash);
       showMessage("success", "Tokens received successfully!");
       refetchCommon();
       setEthAmount("0.001");
     }
-  }, [isBuySuccess]);
+  }, [buyHash, isBuyPending, lastBuyHash]);
+
+  // Handle errors
+  useEffect(() => {
+    if (buyError) {
+      showMessage("error", buyError.message || "Transaction failed");
+    }
+  }, [buyError]);
 
   const showMessage = (type: "success" | "error" | "info", text: string) => {
     setMessage({ type, text });
     setTimeout(() => setMessage(null), 5000);
   };
 
-  const handleGetTokens = () => {
-    if (!isConnected) {
+  const handleGetTokens = async () => {
+    if (!authenticated) {
       showMessage("error", "Please connect your wallet");
       return;
     }
@@ -45,17 +76,21 @@ export default function CommonTokenFaucet() {
       return;
     }
 
-    if (ethBalance && parseFloat(ethAmount) > parseFloat(ethBalance.formatted)) {
+    if (parseFloat(ethAmount) > parseFloat(ethBalance)) {
       showMessage("error", "Insufficient ETH balance");
       return;
     }
 
-    getTokens(ethAmount);
+    try {
+      await getTokens(ethAmount);
+    } catch (error: any) {
+      showMessage("error", error.message || "Failed to get tokens");
+    }
   };
 
   const estimatedCommon = calculateCommonAmount(ethAmount);
 
-  if (!isConnected) {
+  if (!authenticated) {
     return (
       <div className="max-w-2xl mx-auto">
         <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-8 text-center">
@@ -97,7 +132,7 @@ export default function CommonTokenFaucet() {
           <div className="bg-white rounded-lg p-4 border border-gray-200">
             <p className="text-xs text-gray-600 mb-1">Your ETH Balance</p>
             <p className="text-lg font-bold text-gray-900">
-              {ethBalance ? parseFloat(ethBalance.formatted).toFixed(4) : "0.0000"} ETH
+              {parseFloat(ethBalance).toFixed(4)} ETH
             </p>
           </div>
           <div className="bg-white rounded-lg p-4 border border-gray-200">
@@ -213,13 +248,13 @@ export default function CommonTokenFaucet() {
           {/* Get Tokens Button */}
           <button
             onClick={handleGetTokens}
-            disabled={isBuyPending || isBuyConfirming || !ethAmount}
+            disabled={isBuyPending || !ethAmount}
             className="w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
           >
-            {isBuyPending || isBuyConfirming ? (
+            {isBuyPending ? (
               <>
                 <Loader2 className="w-5 h-5 animate-spin" />
-                {isBuyPending ? "Confirming..." : "Processing..."}
+                Processing transaction...
               </>
             ) : (
               <>
