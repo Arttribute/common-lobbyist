@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useAuth } from "@/context/auth-context";
 import TokenBalance from "@/components/dao/token-balance";
 import SignalButton from "@/components/forum/signal-button";
+import AgentChatWidget from "@/components/agent/AgentChatWidget";
 import type { Forum, Organization, ForumPost } from "@/types/forum";
 
 interface PageParams {
@@ -237,6 +238,14 @@ export default function ForumPage({ params }: PageParams) {
           </aside>
         </div>
       </main>
+
+      {/* Agent Chat Widget */}
+      {dao && dao.agent?.enabled && (
+        <AgentChatWidget
+          organizationId={resolvedParams.organizationId}
+          organizationName={dao.name}
+        />
+      )}
     </div>
   );
 }

@@ -2,12 +2,15 @@
 "use client";
 
 import { useState } from "react";
+import ContentInsights from "@/components/agent/ContentInsights";
 
 interface ContentEditorProps {
   type: "post" | "comment" | "poll";
   onSubmit: (data: ContentData) => void;
   placeholder?: string;
   buttonText?: string;
+  organizationId?: string;
+  enableAgentInsights?: boolean;
 }
 
 export interface ContentData {
@@ -24,6 +27,8 @@ export default function ContentEditor({
   onSubmit,
   placeholder = "Tell your story...",
   buttonText = "Publish",
+  organizationId,
+  enableAgentInsights = true,
 }: ContentEditorProps) {
   const [title, setTitle] = useState("");
   const [text, setText] = useState("");
@@ -120,6 +125,16 @@ export default function ContentEditor({
           >
             + Add option
           </button>
+        </div>
+      )}
+
+      {/* Agent Insights */}
+      {enableAgentInsights && organizationId && (text.trim() || title.trim()) && (
+        <div className="mt-6">
+          <ContentInsights
+            organizationId={organizationId}
+            content={type === "post" ? `${title}\n\n${text}` : text}
+          />
         </div>
       )}
 

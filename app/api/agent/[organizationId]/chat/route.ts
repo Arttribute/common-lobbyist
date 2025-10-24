@@ -1,0 +1,106 @@
+/**
+ * Agent Chat API
+ *
+ * POST /api/agent/[organizationId]/chat
+ * Stream chat responses from the DAO's agent
+ */
+
+import { NextRequest, NextResponse } from "next/server";
+import { getAuthenticatedUser } from "@/lib/auth/middleware";
+import dbConnect from "@/lib/dbConnect";
+import Organization from "@/models/Organization";
+import { agentCommonsService } from "@/lib/services/agentcommons";
+
+export async function POST(
+  request: NextRequest,
+  { params }: { params: { organizationId: string } }
+) {
+  try {
+    // Authenticate the user
+    const user = await getAuthenticatedUser(request);
+    if (!user || !user.walletAddress) {
+      return NextResponse.json(
+        { error: "Authentication required" },
+        { status: 401 }
+      );
+    }
+
+    await dbConnect();
+
+    // Get the organization and its agent config
+    const organization = await Organization.findById(params.organizationId);
+    if (!organization) {
+      return NextResponse.json(
+        { error: "Organization not found" },
+        { status: 404 }
+      );
+    }
+
+    if (!organization.agent?.agentId || !organization.agent?.enabled) {
+      return NextResponse.json(
+        { error: "Agent not configured or disabled for this DAO" },
+        { status: 400 }
+      );
+    }
+
+    const body = await request.json();
+    const { message, sessionId } = body;
+
+    if (!message) {
+      return NextResponse.json(
+        { error: "Message is required" },
+        { status: 400 }
+      );
+    }
+
+    // Create a ReadableStream for SSE
+    const encoder = new TextEncoder();
+    const stream = new ReadableStream({
+      async start(controller) {
+        try {
+          // Stream the agent's response
+          const agentStream = agentCommonsService.runAgentStream({
+            agentId: organization.agent.agentId!,
+            messages: [
+              {
+                role: "user",
+                content: message,
+              },
+            ],
+            sessionId: sessionId || organization.agent.sessionId,
+            initiator: user.walletAddress,
+          });
+
+          for await (const chunk of agentStream) {
+            const sseData = `data: ${JSON.stringify({ type: "token", content: chunk })}\n\n`;
+            controller.enqueue(encoder.encode(sseData));
+          }
+
+          // Send completion signal
+          const completionData = `data: ${JSON.stringify({ type: "done" })}\n\n`;
+          controller.enqueue(encoder.encode(completionData));
+          controller.close();
+        } catch (error) {
+          console.error("Error streaming agent response:", error);
+          const errorData = `data: ${JSON.stringify({ type: "error", message: "Failed to stream response" })}\n\n`;
+          controller.enqueue(encoder.encode(errorData));
+          controller.close();
+        }
+      },
+    });
+
+    return new Response(stream, {
+      headers: {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        Connection: "keep-alive",
+      },
+    });
+  } catch (error) {
+    console.error("Error in agent chat:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}

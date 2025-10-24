@@ -9,6 +9,7 @@ import { useAuth } from "@/context/auth-context";
 import type { ForumPost, Organization } from "@/types/forum";
 import TokenBalance from "@/components/dao/token-balance";
 import SignalButton from "@/components/forum/signal-button";
+import AgentChatWidget from "@/components/agent/AgentChatWidget";
 
 interface PageParams {
   params: Promise<{
@@ -421,6 +422,14 @@ export default function PostDetailPage({ params }: PageParams) {
           </div>
         </article>
       </main>
+
+      {/* Agent Chat Widget */}
+      {dao && dao.agent?.enabled && resolvedParams && (
+        <AgentChatWidget
+          organizationId={resolvedParams.organizationId}
+          organizationName={dao.name}
+        />
+      )}
     </div>
   );
 }

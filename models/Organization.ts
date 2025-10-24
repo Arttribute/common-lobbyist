@@ -30,6 +30,21 @@ const OrganizationSchema = new mongoose.Schema(
 
     // Creator wallet address
     creatorAddress: { type: String, required: true },
+
+    // Agent configuration
+    agent: {
+      agentId: { type: String }, // AgentCommons agent ID
+      enabled: { type: Boolean, default: true }, // Whether agent is active
+      persona: { type: String }, // Agent persona/character
+      instructions: { type: String }, // Custom instructions for agent
+      sessionId: { type: String }, // Main agent session ID
+      temperature: { type: Number, min: 0, max: 2, default: 0.7 },
+      maxTokens: { type: Number, default: 2000 },
+      topP: { type: Number, min: 0, max: 1, default: 1 },
+      presencePenalty: { type: Number, min: -2, max: 2, default: 0 },
+      frequencyPenalty: { type: Number, min: -2, max: 2, default: 0 },
+      createdAt: { type: Date }, // When agent was created
+    },
   },
   { timestamps: true }
 );
