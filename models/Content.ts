@@ -35,9 +35,13 @@ const ContentSchema = new mongoose.Schema(
     },
     revisions: [{ cid: String, createdAt: Date }],
 
+    // On-chain signal data - synced when tokens are placed
     onchain: {
-      ideaId: { type: String }, // bytes32 hex
-      ipfsDigest: { type: String }, // bytes32 hex
+      synced: { type: Boolean, default: false }, // Whether this content has been signaled on-chain
+      lastSyncedAt: { type: Date }, // Last time on-chain data was synced
+      totalRaw: { type: String, default: "0" }, // Total tokens placed (as string for BigInt)
+      totalQuadWeight: { type: String, default: "0" }, // Quadratic weighted total
+      supporters: { type: Number, default: 0 }, // Number of unique supporters
     },
 
     embeddings: {
@@ -47,8 +51,8 @@ const ContentSchema = new mongoose.Schema(
 
     counters: {
       replies: { type: Number, default: 0 },
-      placedRaw: { type: String, default: "0" },
-      qWeight: { type: String, default: "0" },
+      placedRaw: { type: String, default: "0" }, // Deprecated: use onchain.totalRaw
+      qWeight: { type: String, default: "0" }, // Deprecated: use onchain.totalQuadWeight
     },
 
     createdAt: { type: Date, default: () => new Date() },

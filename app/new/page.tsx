@@ -3,96 +3,167 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { useAuth } from "@/context/auth-context";
+import { useContracts } from "@/hooks/use-contracts";
+import { getDaoFactoryAddress } from "@/lib/contracts/config";
+import { baseSepolia } from "viem/chains";
 
 export default function NewOrganization() {
   const router = useRouter();
+  const { authenticated, login, authState } = useAuth();
+  const {
+    createDAO,
+    isLoading: contractLoading,
+    error: contractError,
+    isConnected,
+  } = useContracts();
+
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [chainId, setChainId] = useState("1");
+  const [tokenName, setTokenName] = useState("");
+  const [tokenSymbol, setTokenSymbol] = useState("");
+  const [initialSupply, setInitialSupply] = useState("1000000");
+  const [metadataCid, setMetadataCid] = useState("");
   const [loading, setLoading] = useState(false);
+  const [step, setStep] = useState<"form" | "deploying" | "saving">("form");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) return;
+
+    // Check authentication
+    if (!authenticated) {
+      alert("Please login to create a DAO");
+      await login();
+      return;
+    }
+
+    if (!isConnected) {
+      alert("Please connect your wallet to create a DAO");
+      return;
+    }
+
+    if (!name.trim() || !tokenName.trim() || !tokenSymbol.trim()) {
+      alert("Please fill in all required fields");
+      return;
+    }
 
     setLoading(true);
+    setStep("deploying");
 
     try {
+      // Step 1: Deploy contracts on-chain
+      console.log("Deploying DAO on-chain...");
+      const result = await createDAO({
+        name: tokenName,
+        symbol: tokenSymbol,
+        initialSupply,
+        metadataCid:
+          metadataCid || `dao:${name.toLowerCase().replace(/\s+/g, "-")}`,
+      });
+
+      if (!result) {
+        throw new Error(contractError || "Failed to deploy DAO on-chain");
+      }
+
+      console.log("DAO deployed successfully:", result);
+
+      // Step 2: Save to database
+      setStep("saving");
+      console.log("Saving DAO to database...");
+
       const res = await fetch("/api/organization", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${authState.idToken}`,
+        },
         body: JSON.stringify({
           name,
           description,
+          tokenName,
+          tokenSymbol,
+          initialSupply,
           onchain: {
-            chainId: parseInt(chainId),
-            factory: "0x0000000000000000000000000000000000000000",
-            registry: "0x0000000000000000000000000000000000000000",
-            token: "0x0000000000000000000000000000000000000000",
+            chainId: baseSepolia.id,
+            factory: getDaoFactoryAddress(baseSepolia.id),
+            registry: result.registryAddress,
+            token: result.tokenAddress,
+            txHash: result.txHash,
+            deployedBy: authState.walletAddress,
           },
         }),
       });
 
-      if (res.ok) {
-        const org = await res.json();
-        router.push(`/organization/${org._id}`);
-      } else {
+      if (!res.ok) {
         const error = await res.json();
-        alert(error.error || "Failed to create organization");
-        setLoading(false);
+        throw new Error(
+          error.error || "Failed to save organization to database"
+        );
       }
+
+      const org = await res.json();
+      console.log("DAO saved to database:", org);
+
+      // Success! Redirect to the organization page
+      router.push(`/organization/${org._id}`);
     } catch (error) {
       console.error("Error creating organization:", error);
-      alert("Failed to create organization");
+      alert(
+        error instanceof Error ? error.message : "Failed to create organization"
+      );
       setLoading(false);
+      setStep("form");
     }
   };
 
   return (
     <div className="min-h-screen bg-white dark:bg-neutral-950">
-      {/* Simple Header */}
-      <header className="border-b border-neutral-200 dark:border-neutral-800">
-        <div className="max-w-3xl mx-auto px-6 py-4">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            <span>Home</span>
-          </Link>
-        </div>
-      </header>
-
       {/* Main Content */}
       <main className="max-w-2xl mx-auto px-6 py-12">
         <div className="mb-10">
           <h1 className="text-3xl font-serif font-bold text-neutral-900 dark:text-neutral-100 mb-3">
-            Create a new organization
+            Create a new DAO
           </h1>
           <p className="text-base text-neutral-600 dark:text-neutral-400 leading-relaxed">
-            Start building your community forum. Organizations can have multiple
-            forums for different discussion topics.
+            Deploy your Common Lobbyist DAO on-chain. Your DAO will have its own
+            governance token and signal registry for collective memory
+            management.
           </p>
         </div>
 
+        {!authenticated && (
+          <div className="mb-8 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+            <p className="text-sm text-amber-800 dark:text-amber-200">
+              Please login to create a DAO
+            </p>
+            <button
+              onClick={() => login()}
+              className="mt-2 px-4 py-2 text-sm bg-amber-600 hover:bg-amber-700 text-white rounded-md font-medium transition-colors"
+            >
+              Login
+            </button>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-7">
+          {/* Organization Name */}
           <div>
             <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-              Organization Name
+              DAO Name *
             </label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Ethereum Foundation"
+              placeholder="e.g. Ethereum Governance"
               className="w-full px-0 py-2.5 text-xl border-0 border-b-2 border-neutral-200 dark:border-neutral-800 bg-transparent focus:outline-none focus:border-neutral-900 dark:focus:border-neutral-100 transition-colors placeholder:text-neutral-300 dark:placeholder:text-neutral-700"
               required
+              disabled={loading}
               autoFocus
             />
           </div>
 
+          {/* Description */}
           <div>
             <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
               Description
@@ -100,36 +171,120 @@ export default function NewOrganization() {
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Tell us about your organization..."
-              rows={4}
+              placeholder="Describe your DAO's purpose and goals..."
+              rows={3}
               className="w-full px-0 py-2.5 text-base border-0 border-b-2 border-neutral-200 dark:border-neutral-800 bg-transparent focus:outline-none focus:border-neutral-900 dark:focus:border-neutral-100 transition-colors resize-none placeholder:text-neutral-300 dark:placeholder:text-neutral-700"
+              disabled={loading}
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-              Blockchain Network
-            </label>
-            <select
-              value={chainId}
-              onChange={(e) => setChainId(e.target.value)}
-              className="w-full px-4 py-2.5 text-base border-2 border-neutral-200 dark:border-neutral-800 rounded-md bg-transparent focus:outline-none focus:border-neutral-900 dark:focus:border-neutral-100 transition-colors"
-            >
-              <option value="1">Ethereum Mainnet</option>
-              <option value="137">Polygon</option>
-              <option value="10">Optimism</option>
-              <option value="42161">Arbitrum</option>
-              <option value="8453">Base</option>
-            </select>
+          {/* Token Details */}
+          <div className="border-t border-neutral-200 dark:border-neutral-800 pt-7 mt-7">
+            <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-4">
+              Governance Token Details
+            </h2>
+
+            <div className="space-y-5">
+              <div>
+                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                  Token Name *
+                </label>
+                <input
+                  type="text"
+                  value={tokenName}
+                  onChange={(e) => setTokenName(e.target.value)}
+                  placeholder="e.g. Ethereum Governance Token"
+                  className="w-full px-4 py-2.5 text-base border-2 border-neutral-200 dark:border-neutral-800 rounded-md bg-transparent focus:outline-none focus:border-neutral-900 dark:focus:border-neutral-100 transition-colors placeholder:text-neutral-300 dark:placeholder:text-neutral-700"
+                  required
+                  disabled={loading}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                  Token Symbol *
+                </label>
+                <input
+                  type="text"
+                  value={tokenSymbol}
+                  onChange={(e) => setTokenSymbol(e.target.value.toUpperCase())}
+                  placeholder="e.g. EGT"
+                  maxLength={6}
+                  className="w-full px-4 py-2.5 text-base border-2 border-neutral-200 dark:border-neutral-800 rounded-md bg-transparent focus:outline-none focus:border-neutral-900 dark:focus:border-neutral-100 transition-colors placeholder:text-neutral-300 dark:placeholder:text-neutral-700"
+                  required
+                  disabled={loading}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                  Initial Supply *
+                </label>
+                <input
+                  type="number"
+                  value={initialSupply}
+                  onChange={(e) => setInitialSupply(e.target.value)}
+                  placeholder="1000000"
+                  min="1"
+                  className="w-full px-4 py-2.5 text-base border-2 border-neutral-200 dark:border-neutral-800 rounded-md bg-transparent focus:outline-none focus:border-neutral-900 dark:focus:border-neutral-100 transition-colors placeholder:text-neutral-300 dark:placeholder:text-neutral-700"
+                  required
+                  disabled={loading}
+                />
+                <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+                  Initial tokens will be minted to your wallet
+                </p>
+              </div>
+            </div>
           </div>
 
+          {/* Network Info */}
+          <div className="p-4 bg-neutral-50 dark:bg-neutral-900 rounded-lg">
+            <p className="text-sm text-neutral-600 dark:text-neutral-400">
+              <strong>Network:</strong> Base Sepolia (Testnet)
+            </p>
+            <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
+              <strong>Factory Contract:</strong>{" "}
+              {getDaoFactoryAddress(baseSepolia.id)}
+            </p>
+          </div>
+
+          {/* Status Messages */}
+          {loading && (
+            <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+              <p className="text-sm text-blue-800 dark:text-blue-200">
+                {step === "deploying" &&
+                  "⏳ Deploying contracts on-chain... Please confirm the transaction in your wallet."}
+                {step === "saving" && "⏳ Saving DAO to database..."}
+              </p>
+            </div>
+          )}
+
+          {contractError && (
+            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+              <p className="text-sm text-red-800 dark:text-red-200">
+                Error: {contractError}
+              </p>
+            </div>
+          )}
+
+          {/* Submit Button */}
           <div className="pt-6">
             <button
               type="submit"
-              disabled={loading || !name.trim()}
-              className="px-6 py-2.5 text-sm bg-neutral-900 dark:bg-neutral-100 hover:bg-neutral-800 dark:hover:bg-neutral-200 text-white dark:text-neutral-900 rounded-full font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={
+                loading ||
+                !authenticated ||
+                !name.trim() ||
+                !tokenName.trim() ||
+                !tokenSymbol.trim()
+              }
+              className="w-full px-6 py-3 text-base bg-neutral-900 dark:bg-neutral-100 hover:bg-neutral-800 dark:hover:bg-neutral-200 text-white dark:text-neutral-900 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? "Creating..." : "Create Organization"}
+              {loading
+                ? step === "deploying"
+                  ? "Deploying..."
+                  : "Saving..."
+                : "Deploy DAO"}
             </button>
           </div>
         </form>
