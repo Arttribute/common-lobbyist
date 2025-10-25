@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth/middleware";
 import dbConnect from "@/lib/dbConnect";
 import Organization from "@/models/Organization";
+import Agent from "@/models/Agent";
 import Content from "@/models/Content";
 import { agentCommonsService } from "@/lib/services/agentcommons";
 
@@ -32,7 +33,9 @@ export async function POST(
     await dbConnect();
 
     // Get the organization and its agent config
-    const organization = await Organization.findById(resolvedParams.organizationId);
+    const organization = await Organization.findById(
+      resolvedParams.organizationId
+    );
     if (!organization) {
       return NextResponse.json(
         { error: "Organization not found" },
@@ -40,7 +43,13 @@ export async function POST(
       );
     }
 
-    if (!organization.agent?.agentId || !organization.agent?.enabled) {
+    // Get the default agent for this organization
+    const agent = await Agent.findOne({
+      organizationId: resolvedParams.organizationId,
+      isDefault: true,
+    });
+
+    if (!agent?.agentId || !agent?.enabled) {
       return NextResponse.json(
         { error: "Agent not configured or disabled for this DAO" },
         { status: 400 }
@@ -97,7 +106,7 @@ Keep your response concise and practical.`;
 
     // Get insights from the agent (non-streaming for simpler UI)
     const response = await agentCommonsService.runAgent({
-      agentId: organization.agent.agentId!,
+      agentId: agent.agentId!,
       messages: [
         {
           role: "user",

@@ -1,6 +1,7 @@
 // app/api/organization/[organizationId]/route.ts
 import dbConnect from "@/lib/dbConnect";
 import Organization from "@/models/Organization";
+import Agent from "@/models/Agent";
 import { NextRequest, NextResponse } from "next/server";
 
 /**
@@ -24,7 +25,32 @@ export async function GET(
       );
     }
 
-    return NextResponse.json(organization, { status: 200 });
+    // Get the default agent for this organization
+    const defaultAgent = await Agent.findOne({
+      organizationId: organizationId,
+      isDefault: true,
+    });
+
+    // Add agent information to the organization object for backward compatibility
+    const organizationWithAgent = {
+      ...organization.toObject(),
+      agent: defaultAgent
+        ? {
+            agentId: defaultAgent.agentId,
+            enabled: defaultAgent.enabled,
+            persona: defaultAgent.persona,
+            instructions: defaultAgent.instructions,
+            temperature: defaultAgent.temperature,
+            maxTokens: defaultAgent.maxTokens,
+            topP: defaultAgent.topP,
+            presencePenalty: defaultAgent.presencePenalty,
+            frequencyPenalty: defaultAgent.frequencyPenalty,
+            createdAt: defaultAgent.createdAt,
+          }
+        : null,
+    };
+
+    return NextResponse.json(organizationWithAgent, { status: 200 });
   } catch (error) {
     console.error("Error fetching organization:", error);
     return NextResponse.json(

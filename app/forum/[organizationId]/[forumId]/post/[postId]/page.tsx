@@ -3,13 +3,22 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Search, Bell, ArrowUp, MessageCircle, Bookmark, Square, Edit } from "lucide-react";
+import {
+  Search,
+  Bell,
+  ArrowUp,
+  MessageCircle,
+  Bookmark,
+  Square,
+  Edit,
+} from "lucide-react";
 import MarkdownRenderer from "@/components/forum/markdown-renderer";
 import { useAuth } from "@/context/auth-context";
 import type { ForumPost, Organization } from "@/types/forum";
 import TokenBalance from "@/components/dao/token-balance";
 import SignalButton from "@/components/forum/signal-button";
 import AgentChatWidget from "@/components/agent/AgentChatWidget";
+import FundAgentButton from "@/components/agent/FundAgentButton";
 
 interface PageParams {
   params: Promise<{
@@ -223,7 +232,9 @@ export default function PostDetailPage({ params }: PageParams) {
                   daoId={dao._id}
                   registryAddress={dao.onchain.registry}
                   tokenAddress={dao.onchain.token}
-                  currentSignals={post.onchain?.totalRaw || post.counters?.placedRaw || "0"}
+                  currentSignals={
+                    post.onchain?.totalRaw || post.counters?.placedRaw || "0"
+                  }
                   userSignal={
                     authState.walletAddress
                       ? post.userSignals?.find(
@@ -236,7 +247,9 @@ export default function PostDetailPage({ params }: PageParams) {
               ) : (
                 <button className="flex items-center gap-2 text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors">
                   <ArrowUp className="w-6 h-6" />
-                  <span className="text-sm">{post.counters?.placedRaw || "0"}</span>
+                  <span className="text-sm">
+                    {post.counters?.placedRaw || "0"}
+                  </span>
                 </button>
               )}
               <button className="flex items-center gap-2 text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors">
@@ -263,7 +276,9 @@ export default function PostDetailPage({ params }: PageParams) {
                   daoId={dao._id}
                   registryAddress={dao.onchain.registry}
                   tokenAddress={dao.onchain.token}
-                  currentSignals={post.onchain?.totalRaw || post.counters?.placedRaw || "0"}
+                  currentSignals={
+                    post.onchain?.totalRaw || post.counters?.placedRaw || "0"
+                  }
                   userSignal={
                     authState.walletAddress
                       ? post.userSignals?.find(
@@ -276,7 +291,9 @@ export default function PostDetailPage({ params }: PageParams) {
               ) : (
                 <button className="flex items-center gap-2 text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors">
                   <ArrowUp className="w-6 h-6" />
-                  <span className="text-sm">{post.counters?.placedRaw || "0"}</span>
+                  <span className="text-sm">
+                    {post.counters?.placedRaw || "0"}
+                  </span>
                 </button>
               )}
               <button className="flex items-center gap-2 text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors">
@@ -284,9 +301,19 @@ export default function PostDetailPage({ params }: PageParams) {
                 <span className="text-sm">{comments.length}</span>
               </button>
             </div>
-            <button className="text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors">
-              <Bookmark className="w-6 h-6" />
-            </button>
+            <div className="flex items-center gap-4">
+              {/* Fund Agent Button */}
+              {dao && dao.agent?.agentId && (
+                <FundAgentButton
+                  organizationId={resolvedParams.organizationId}
+                  organizationName={dao.name}
+                  agentId={dao.agent.agentId}
+                />
+              )}
+              <button className="text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors">
+                <Bookmark className="w-6 h-6" />
+              </button>
+            </div>
           </div>
 
           {/* Comments Section */}
@@ -350,7 +377,9 @@ export default function PostDetailPage({ params }: PageParams) {
                           </span>
                         </div>
                         <div className="prose prose-neutral dark:prose-invert max-w-none mb-4">
-                          <MarkdownRenderer content={comment.content.text || ""} />
+                          <MarkdownRenderer
+                            content={comment.content.text || ""}
+                          />
                         </div>
                         <div className="flex items-center gap-4">
                           {dao?.onchain?.registry && dao?.onchain?.token ? (
@@ -359,11 +388,16 @@ export default function PostDetailPage({ params }: PageParams) {
                               daoId={dao._id}
                               registryAddress={dao.onchain.registry}
                               tokenAddress={dao.onchain.token}
-                              currentSignals={comment.onchain?.totalRaw || comment.counters?.placedRaw || "0"}
+                              currentSignals={
+                                comment.onchain?.totalRaw ||
+                                comment.counters?.placedRaw ||
+                                "0"
+                              }
                               userSignal={
                                 authState.walletAddress
                                   ? comment.userSignals?.find(
-                                      (s) => s.userId === authState.walletAddress
+                                      (s) =>
+                                        s.userId === authState.walletAddress
                                     )?.amount
                                   : undefined
                               }

@@ -8,10 +8,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/dbConnect";
 import Organization from "@/models/Organization";
+import Agent from "@/models/Agent";
 import { createPublicClient, http, formatEther, Address } from "viem";
 import { baseSepolia } from "viem/chains";
 
-const COMMON_TOKEN_ADDRESS = "0x09d3e33fBeB985653bFE868eb5a62435fFA04e4F" as Address;
+const COMMON_TOKEN_ADDRESS =
+  "0x09d3e33fBeB985653bFE868eb5a62435fFA04e4F" as Address;
 
 // ERC-20 ABI for balanceOf
 const ERC20_ABI = [
@@ -35,7 +37,9 @@ export async function GET(
     await dbConnect();
 
     // Get the organization and its agent config
-    const organization = await Organization.findById(resolvedParams.organizationId);
+    const organization = await Organization.findById(
+      resolvedParams.organizationId
+    );
     if (!organization) {
       return NextResponse.json(
         { error: "Organization not found" },
@@ -43,7 +47,13 @@ export async function GET(
       );
     }
 
-    if (!organization.agent?.agentId) {
+    // Get the default agent for this organization
+    const agent = await Agent.findOne({
+      organizationId: resolvedParams.organizationId,
+      isDefault: true,
+    });
+
+    if (!agent?.agentId) {
       return NextResponse.json(
         { error: "Agent not configured for this DAO" },
         { status: 400 }
@@ -51,7 +61,7 @@ export async function GET(
     }
 
     // The agentId IS the wallet address
-    const walletAddress = organization.agent.agentId as Address;
+    const walletAddress = agent.agentId as Address;
 
     // Get the balance on-chain using viem
     const publicClient = createPublicClient({
@@ -72,7 +82,7 @@ export async function GET(
       {
         balance,
         walletAddress,
-        agentId: organization.agent.agentId,
+        agentId: agent.agentId,
       },
       { status: 200 }
     );

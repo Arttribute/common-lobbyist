@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Bot } from "lucide-react";
 import Link from "next/link";
 import ForumCard from "@/components/forum-card";
 import type { Organization, Forum } from "@/types/forum";
@@ -137,12 +137,21 @@ export default function OrganizationPage({ params }: PageParams) {
                 </p>
               )}
             </div>
-            <button
-              onClick={() => setShowCreateForum(true)}
-              className="px-5 py-2 text-sm bg-neutral-900 dark:bg-neutral-100 hover:bg-neutral-800 dark:hover:bg-neutral-200 text-white dark:text-neutral-900 rounded-full font-medium transition-colors"
-            >
-              New Forum
-            </button>
+            <div className="flex gap-3">
+              <Link
+                href={`/organization/${resolvedParams.organizationId}/agents`}
+                className="flex items-center gap-2 px-5 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-full font-medium transition-colors"
+              >
+                <Bot className="w-4 h-4" />
+                Manage Agents
+              </Link>
+              <button
+                onClick={() => setShowCreateForum(true)}
+                className="px-5 py-2 text-sm bg-neutral-900 dark:bg-neutral-100 hover:bg-neutral-800 dark:hover:bg-neutral-200 text-white dark:text-neutral-900 rounded-full font-medium transition-colors"
+              >
+                New Forum
+              </button>
+            </div>
           </div>
 
           {/* Token Balance Display */}

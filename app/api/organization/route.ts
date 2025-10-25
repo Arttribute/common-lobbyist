@@ -3,7 +3,6 @@ import dbConnect from "@/lib/dbConnect";
 import Organization from "@/models/Organization";
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth/middleware";
-import { agentCommonsService } from "@/lib/services/agentcommons";
 
 /**
  * GET /api/organization - Get all DAOs
@@ -47,7 +46,6 @@ export async function POST(request: NextRequest) {
       tokenSymbol,
       initialSupply,
       onchain,
-      agent: agentConfig,
     } = body;
 
     // Validate required fields
@@ -100,63 +98,8 @@ export async function POST(request: NextRequest) {
 
     await newOrganization.save();
 
-    // Create an agent for this DAO
-    try {
-      const agentPersona =
-        agentConfig?.persona ||
-        agentCommonsService.getDefaultPersona(name);
-      const agentInstructions =
-        agentConfig?.instructions ||
-        agentCommonsService.getDefaultInstructions(name);
-
-      console.log("Creating agent for DAO:", {
-        name: `${name} Community Agent`,
-        owner: user.walletAddress,
-        persona: agentPersona.substring(0, 100) + "...",
-      });
-
-      const agent = await agentCommonsService.createAgent({
-        name: `${name} Community Agent`,
-        persona: agentPersona,
-        instructions: agentInstructions,
-        owner: user.walletAddress,
-        temperature: agentConfig?.temperature || 0.7,
-        maxTokens: agentConfig?.maxTokens || 2000,
-        topP: agentConfig?.topP || 1,
-        presencePenalty: agentConfig?.presencePenalty || 0,
-        frequencyPenalty: agentConfig?.frequencyPenalty || 0,
-        commonsOwned: false,
-      });
-
-      console.log("Agent created successfully:", agent.agentId);
-
-      // Update the organization with agent details
-      newOrganization.agent = {
-        agentId: agent.agentId,
-        enabled: true,
-        persona: agentPersona,
-        instructions: agentInstructions,
-        temperature: agent.temperature,
-        maxTokens: agent.maxTokens,
-        topP: agent.topP,
-        presencePenalty: agent.presencePenalty,
-        frequencyPenalty: agent.frequencyPenalty,
-        createdAt: new Date(),
-      };
-
-      await newOrganization.save();
-    } catch (agentError: any) {
-      console.error("Error creating agent for DAO:", agentError);
-      console.error("Agent error details:", agentError.message, agentError.stack);
-      // Don't fail the DAO creation if agent creation fails
-      // The agent can be created later via settings
-      // Store the error so we can show it to the user
-      newOrganization.agent = {
-        enabled: false,
-        createdAt: new Date(),
-      } as any;
-      await newOrganization.save();
-    }
+    // Note: Agent creation is now handled separately via the /api/agent endpoint
+    // This allows for better separation of concerns and more flexible agent management
 
     return NextResponse.json(newOrganization, { status: 201 });
   } catch (error) {
