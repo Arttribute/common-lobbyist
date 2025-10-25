@@ -2,25 +2,49 @@
 
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import AccountMenu from "@/components/account/account-menu";
 
 export default function Home() {
   return (
     <div className="min-h-screen bg-white dark:bg-black">
+      {/* Navbar */}
+      <div className="flex justify-between items-center px-6 py-4">
+        {/* Logo and brand */}
+        <div className="flex items-center">
+          <Link
+            href="/"
+            className="text-xl font-bold text-neutral-900 dark:text-neutral-100 hover:text-neutral-700 dark:hover:text-neutral-300 transition-colors"
+          >
+            <div className="">
+              <div className="bg-yellow-300 w-36 h-5 -mb-6.5 ml-1 rounded-sm"></div>
+              <h2 className="text-lg font-semibold">Common Lobbyist</h2>
+            </div>
+          </Link>
+        </div>
+        {/* Navigation links */}
+        <div className="hidden md:flex items-center space-x-6"></div>
+        {/* Account menu */}
+        <div className="flex items-center">
+          <AccountMenu />
+        </div>
+      </div>
       {/* Hero Section */}
       <section className="border-b border-black dark:border-white">
-        <div className="max-w-[1192px] mx-auto px-6 py-24 md:py-32">
-          <div className="max-w-[600px]">
-            <h1 className="text-[106px] leading-[95px] font-serif font-normal text-black dark:text-white mb-12 tracking-tight">
-              Human <br />stories & ideas
+        <div className="max-w-[88%] mx-auto px-6 py-16 md:py-20">
+          <div className="max-w-[70%]">
+            <h1 className="text-7xl leading-[85px]  text-black dark:text-white mb-6 tracking-tight">
+              Collective memory for decentralized governance.
             </h1>
-            <p className="text-2xl text-neutral-600 dark:text-neutral-400 mb-12 leading-relaxed">
-              A place to read, write, and deepen your understanding
+            <p className="text-xl text-neutral-600 dark:text-neutral-400 mb-12 leading-relaxed">
+              Create forums and autonomous agents that organize discussion,
+              preserve insight, and represent the collective will of your
+              community.
             </p>
             <Link
               href="/organizations"
-              className="inline-block px-12 py-3 bg-black dark:bg-white hover:bg-neutral-800 dark:hover:bg-neutral-200 text-white dark:text-black rounded-full text-xl font-medium transition-colors"
+              className="inline-block px-16 py-2 bg-black dark:bg-white hover:bg-neutral-800 dark:hover:bg-neutral-200 text-white dark:text-black rounded-lg font-medium transition-colors"
             >
-              Start reading
+              Get started
             </Link>
           </div>
         </div>
@@ -28,24 +52,45 @@ export default function Home() {
 
       {/* Features Section */}
       <section className="py-24">
-        <div className="max-w-[1192px] mx-auto px-6">
+        <div className="max-w-[88%] mx-auto px-6">
           <div className="grid md:grid-cols-3 gap-12">
             <div>
-              <h3 className="text-2xl font-bold mb-4">Create forums</h3>
+              <div className="">
+                <div className="bg-yellow-200 w-60 h-6 -mb-7 ml-1 rounded-sm"></div>
+                <h3 className="text-2xl tracking-tight mb-4">
+                  Create DAOs & Forums
+                </h3>
+              </div>
               <p className="text-neutral-600 dark:text-neutral-400 leading-relaxed">
-                Build dedicated spaces for your DAO or organization to discuss ideas, share updates, and engage your community.
+                {
+                  "Deploy your DAO governance tokens and build dedicated spaces for your organization to discuss ideas, and share updates."
+                }
               </p>
             </div>
             <div>
-              <h3 className="text-2xl font-bold mb-4">Rich content</h3>
+              <div className="">
+                <div className="bg-lime-200 w-68 h-6 -mb-7 ml-1 rounded-sm"></div>
+                <h3 className="text-2xl tracking-tight mb-4">
+                  Deploy a Lobbyist Agent
+                </h3>
+              </div>
               <p className="text-neutral-600 dark:text-neutral-400 leading-relaxed">
-                Write with markdown, embed images, create polls, and share your thoughts in a beautiful, distraction-free environment.
+                {
+                  "The agent listens to your governance platforms and articulates shared community positions with verifiable references."
+                }
               </p>
             </div>
             <div>
-              <h3 className="text-2xl font-bold mb-4">Community driven</h3>
+              <div className="">
+                <div className="bg-teal-200 w-72 h-6 -mb-7 ml-1 rounded-sm"></div>
+                <h3 className="text-2xl tracking-tight mb-4">
+                  Signal Ideas with Tokens
+                </h3>
+              </div>
               <p className="text-neutral-600 dark:text-neutral-400 leading-relaxed">
-                Foster meaningful conversations with threaded comments, reactions, and community moderation tools.
+                {
+                  "Members guide the agent’s focus by placing tokens on ideas worth remembering and can withdraw to let them fade."
+                }
               </p>
             </div>
           </div>
@@ -53,23 +98,25 @@ export default function Home() {
       </section>
 
       {/* CTA Section */}
-      <section className="border-t border-black dark:border-white py-16">
-        <div className="max-w-[1192px] mx-auto px-6 text-center">
-          <h2 className="text-4xl font-serif font-bold mb-6">Ready to get started?</h2>
-          <p className="text-xl text-neutral-600 dark:text-neutral-400 mb-8">
+      <section className="py-16">
+        <div className="max-w-[88%] mx-auto px-6 text-center">
+          <h2 className="text-4xl mb-6 tracking-tight">
+            Ready to get started?
+          </h2>
+          <p className="text-lg text-neutral-600 dark:text-neutral-400 mb-8">
             Create your organization and start building your community today.
           </p>
-          <div className="flex gap-4 justify-center">
+          <div className="flex gap-2 justify-center">
             <Link
               href="/new"
-              className="inline-flex items-center gap-2 px-8 py-3 bg-black dark:bg-white hover:bg-neutral-800 dark:hover:bg-neutral-200 text-white dark:text-black rounded-full text-lg font-medium transition-colors"
+              className="inline-flex items-center gap-2 px-12 py-2 bg-black dark:bg-white hover:bg-neutral-800 dark:hover:bg-neutral-200 text-white dark:text-black rounded-lg text-sm font-medium transition-colors"
             >
               Create organization
-              <ArrowRight className="w-5 h-5" />
+              <ArrowRight className="w-4 h-4" />
             </Link>
             <Link
               href="/organizations"
-              className="inline-block px-8 py-3 border border-black dark:border-white hover:bg-neutral-100 dark:hover:bg-neutral-900 text-black dark:text-white rounded-full text-lg font-medium transition-colors"
+              className="inline-block px-8 py-2 border border-black dark:border-white hover:bg-neutral-100 dark:hover:bg-neutral-900 text-black dark:text-white rounded-lg text-sm font-medium transition-colors"
             >
               Browse organizations
             </Link>

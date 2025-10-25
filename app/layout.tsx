@@ -4,6 +4,14 @@ import "./globals.css";
 import Providers from "@/Providers";
 import { AuthProvider } from "@/context/auth-context";
 import Navbar from "@/components/layout/navbar";
+import { Space_Mono } from "next/font/google";
+
+const space_mono = Space_Mono({
+  weight: ["400", "700"],
+  subsets: ["latin"],
+  display: "swap",
+  fallback: ["Helvetica", "Arial", "sans-serif"],
+});
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -17,7 +25,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Common Lobbyist - Decentralized DAO Governance",
-  description: "A governance coordination layer for DAOs with collective memory and token-based signaling",
+  description:
+    "A governance coordination layer for DAOs with collective memory and token-based signaling",
 };
 
 export default function RootLayout({
@@ -27,14 +36,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+      <body className={space_mono.className}>
         <Providers>
-          <AuthProvider>
-            <Navbar />
-            {children}
-          </AuthProvider>
+          <AuthProvider>{children}</AuthProvider>
         </Providers>
       </body>
     </html>
