@@ -1,91 +1,91 @@
- # Common Lobbyist Protocol
+# Common Lobbyist Protocol
 
- A governance coordination layer that gives DAOs a living collective memory and deployable Lobbyist Agents to surface and champion community priorities.
+A governance coordination layer that gives DAOs a living collective memory and deployable Lobbyist Agents to surface and champion community priorities.
 
- ## Context
+## Context
 
- DAOs coordinate through smart contracts and open discussion. As participation scales, signal-to-noise collapses: important threads are missed, debates repeat, and institutional memory decays.
+DAOs coordinate through smart contracts and open discussion. As participation scales, signal-to-noise collapses: important threads are missed, debates repeat, and institutional memory decays.
 
- ## Problem
+## Problem
 
- Human moderators and delegates can't reliably surface and preserve the most important community inputs as DAOs grow. Valuable context is scattered across forum threads and proposals and is hard to keep current.
+Human moderators and delegates can't reliably surface and preserve the most important community inputs as DAOs grow. Valuable context is scattered across forum threads and proposals and is hard to keep current.
 
- ## Solution
+## Solution
 
- The Common Lobbyist Protocol combines on-chain signalling with autonomous, auditable AI agents. Communities place tokens on content to "remember" it; withdrawing tokens lets content naturally decay. Off-chain Lobbyist Agents index high-signal content, synthesize it into verifiable outputs, and publish recommendations that represent the community's prioritized memory.
+The Common Lobbyist Protocol combines on-chain signalling with autonomous, auditable AI agents. Communities place tokens on content to "remember" it; withdrawing tokens lets content naturally decay. Off-chain Lobbyist Agents index high-signal content, synthesize it into verifiable outputs, and publish recommendations that represent the community's prioritized memory.
 
- ## How it works (concise)
+## How it works (concise)
 
- - Deploy a DAO via the `DAOFactory`: the factory creates a `GovernanceToken` and a `SignalRegistry` for that DAO.
- - Members allocate governance tokens to an IPFS CID with `SignalRegistry.signal(cid, amount)` (place-to-remember). Tokens are held in the registry contract.
- - Members withdraw tokens with `SignalRegistry.withdraw(cid, amount)` (withdraw-to-forget); this returns tokens and reduces a CID's influence.
- - Influence is aggregated quadratically: each user's contribution contributes floor(sqrt(tokens)). The registry stores both `totalRaw` (absolute stake) and `totalQuadWeight` (breadth-weighted support). This reduces whale dominance and favors broad consensus.
- - Lobbyist Agents read registry events and high-signal CIDs, fetch the underlying content (IPFS), and synthesize transparent summaries and suggested actions. Agents' outputs are auditable because signals are on-chain.
+- Deploy a DAO via the `DAOFactory`: the factory creates a `GovernanceToken` and a `SignalRegistry` for that DAO.
+- Members allocate governance tokens to an IPFS CID with `SignalRegistry.signal(cid, amount)` (place-to-remember). Tokens are held in the registry contract.
+- Members withdraw tokens with `SignalRegistry.withdraw(cid, amount)` (withdraw-to-forget); this returns tokens and reduces a CID's influence.
+- Influence is aggregated quadratically: each user's contribution contributes floor(sqrt(tokens)). The registry stores both `totalRaw` (absolute stake) and `totalQuadWeight` (breadth-weighted support). This reduces whale dominance and favors broad consensus.
+- Lobbyist Agents read registry events and high-signal CIDs, fetch the underlying content (IPFS), and synthesize transparent summaries and suggested actions. Agents' outputs are auditable because signals are on-chain.
 
- ## DAO Factory, DAOs, Forums & Lobbyist Agents
+## DAO Factory, DAOs, Forums & Lobbyist Agents
 
- - DAOFactory (`onchain/contracts/DaoFactory.sol`): `createDAO(name, symbol, initialSupply, metadataCid)` deploys a `GovernanceToken` and a `SignalRegistry`, records `DaoInfo`, and emits `DaoCreated`.
- - GovernanceToken (`onchain/contracts/GovernanceToken.sol`): ERC-20 token with EIP-2612 permit for better UX; mintable by the DAO owner.
- - SignalRegistry (`onchain/contracts/SignalRegistry.sol`): core memory contract. Key public methods: `signal(cid, amount)`, `withdraw(cid, amount)`, `getMemoryByHash(bytes32)`, and `cidHashOf(string)`. Events: `Signaled` and `Withdrawn` provide a complete audit trail.
- - Forum integration: front-end components link forum content to IPFS CIDs; users signal directly from the UI. Agent components (`components/agent/*`) configure and run Lobbyist Agents that synthesize high-signal content.
+- DAOFactory (`onchain/contracts/DaoFactory.sol`): `createDAO(name, symbol, initialSupply, metadataCid)` deploys a `GovernanceToken` and a `SignalRegistry`, records `DaoInfo`, and emits `DaoCreated`.
+- GovernanceToken (`onchain/contracts/GovernanceToken.sol`): ERC-20 token with EIP-2612 permit for better UX; mintable by the DAO owner.
+- SignalRegistry (`onchain/contracts/SignalRegistry.sol`): core memory contract. Key public methods: `signal(cid, amount)`, `withdraw(cid, amount)`, `getMemoryByHash(bytes32)`, and `cidHashOf(string)`. Events: `Signaled` and `Withdrawn` provide a complete audit trail.
+- Forum integration: front-end components link forum content to IPFS CIDs; users signal directly from the UI. Agent components (`components/agent/*`) configure and run Lobbyist Agents that synthesize high-signal content.
 
- ## Collective memory (how token voting implements it)
+## Collective memory (how token voting implements it)
 
- - Per CID the registry stores:
-   - `totalRaw`: total tokens allocated
-   - `totalQuadWeight`: sum of floor(sqrt(userAllocated)) — quadratic aggregation
-   - `supporters`: count of unique wallets with non-zero allocation
- - When tokens are withdrawn, these aggregates update and agents will de-prioritize content with falling `totalQuadWeight`.
+- Per CID the registry stores:
+  - `totalRaw`: total tokens allocated
+  - `totalQuadWeight`: sum of floor(sqrt(userAllocated)) — quadratic aggregation
+  - `supporters`: count of unique wallets with non-zero allocation
+- When tokens are withdrawn, these aggregates update and agents will de-prioritize content with falling `totalQuadWeight`.
 
- ## Contracts & deployed addresses
+## Contracts & deployed addresses
 
- - Current configured factory address (used by the app config): `0x7e5adb9add98bf0c9450cb814c3746f655fde93f` (Sepolia / `baseSepolia`). This value is defined in `lib/contracts/config.ts` and is used by UI onboarding and DAO creation flows.
- - Per-DAO `token` and `signalRegistry` addresses are returned by `DAOFactory.createDAO(...)` at deployment and saved in the factory's `daos` mapping.
+- Current configured factory address (used by the app config): `0x7e5adb9add98bf0c9450cb814c3746f655fde93f` (Sepolia / `baseSepolia`). This value is defined in `lib/contracts/config.ts` and is used by UI onboarding and DAO creation flows.
+- Per-DAO `token` and `signalRegistry` addresses are returned by `DAOFactory.createDAO(...)` at deployment and saved in the factory's `daos` mapping.
 
- Tip: view on-chain activity using Blockscout (or your network explorer) for the target network and the factory/registry addresses.
+Tip: view on-chain activity using Blockscout (or your network explorer) for the target network and the factory/registry addresses.
 
- ## How it's built (high level)
+## How it's built (high level)
 
- - Frontend: Next.js (app router), React, TypeScript. UI under `components/` and pages in `app/`.
- - Contracts: Solidity 0.8.24, sources and tests under `onchain/` (`onchain/contracts/`, `onchain/test/`).
- - Tooling: Hardhat for compilation, testing and deployment; `onchain` contains the Hardhat setup and test suite.
- - Agent & AI: Agentverse integrations in the UI; the system uses off-chain agents (AI) to read signals, fetch content, and produce summaries. OpenAI SDK is included for AI functionality.
- - Chain & infra: `viem` for chain interactions, MongoDB for off-chain indexing, `@blockscout/app-sdk` included for exploration/analytics.
+- Frontend: Next.js (app router), React, TypeScript. UI under `components/` and pages in `app/`.
+- Contracts: Solidity 0.8.24, sources and tests under `onchain/` (`onchain/contracts/`, `onchain/test/`).
+- Tooling: Hardhat for compilation, testing and deployment; `onchain` contains the Hardhat setup and test suite.
+- Agent & AI: Agentverse integrations in the UI; the system uses off-chain agents (AI) to read signals, fetch content, and produce summaries. OpenAI SDK is included for AI functionality.
+- Chain & infra: `viem` for chain interactions, MongoDB for off-chain indexing, `@blockscout/app-sdk` included for exploration/analytics.
 
- ### Focus notes
+### Focus notes
 
- - Blockscout: used to inspect contract events and transactions — useful for auditing signals and verifying activity for the factory and registries.
- - Agentverse: the UI includes panels to configure agent behavior and view outputs.
- - Hardhat: used for Solidity development: compile, test (`npx hardhat test`) and deploy. The repository includes verification helpers (`scripts/verify-setup.ts`) to validate local environment and contract configuration.
+- Blockscout: used to inspect contract events and transactions — useful for auditing signals and verifying activity for the factory and registries.
+- Agentverse: the UI includes panels to configure agent behavior and view outputs.
+- Hardhat: used for Solidity development: compile, test (`npx hardhat test`) and deploy. The repository includes verification helpers (`scripts/verify-setup.ts`) to validate local environment and contract configuration.
 
- ## Quick start (minimal)
+## Quick start (minimal)
 
- 1. Configure environment variables (e.g. `MONGODB_URI`, RPC endpoint, API keys).
- 2. Install and run:
+1.  Configure environment variables (e.g. `MONGODB_URI`, RPC endpoint, API keys).
+2.  Install and run:
 
- ```bash
- npm install
- npm run dev
- ```
+```bash
+npm install
+npm run dev
+```
 
- 3. Optional: run Solidity tests or verification helpers:
+3.  Optional: run Solidity tests or verification helpers:
 
- ```bash
- npx hardhat test
- npx tsx scripts/verify-setup.ts
- ```
+```bash
+npx hardhat test
+npx tsx scripts/verify-setup.ts
+```
 
- ## Where to read next
+## Where to read next
 
- - Smart contract source: `onchain/contracts/`
- - App contract config: `lib/contracts/config.ts`
- - Integration notes: `INTEGRATION.md`, `AGENT_INTEGRATION_GUIDE.md`, `AGENT_SETUP_CHECKLIST.md`
- - Agent docs: `AGENT_FUNDING_GUIDE.md`, `AGENT_TOKEN_IMPLEMENTATION.md`
+- Smart contract source: `onchain/contracts/`
+- App contract config: `lib/contracts/config.ts`
+- Integration notes: `INTEGRATION.md`, `AGENT_INTEGRATION_GUIDE.md`, `AGENT_SETUP_CHECKLIST.md`
+- Agent docs: `AGENT_FUNDING_GUIDE.md`, `AGENT_TOKEN_IMPLEMENTATION.md`
 
- ---
+---
 
- For implementation questions or to extend the protocol, start by reading the contracts in `onchain/contracts` and the integration notes in `INTEGRATION.md`.
- 
+For implementation questions or to extend the protocol, start by reading the contracts in `onchain/contracts` and the integration notes in `INTEGRATION.md`.
+
 # Common Lobbyist Protocol
 
 > A governance coordination layer for DAOs with collective memory and token-based signaling
@@ -102,52 +102,6 @@ The Common Lobbyist Protocol enables DAOs to deploy autonomous, on-chain agents 
 - 💾 **Persistent Memory** - Content stored on IPFS and MongoDB for fast queries
 - 🔗 **Blockchain Integration** - Real-time sync between smart contracts and database
 - 📊 **Signal Analytics** - Track community priorities with token-weighted signals
-
-## 🚀 Quick Start
-
-### 1. Install Dependencies
-
-```bash
-npm install
-```
-
-### 2. Configure Environment
-
-```bash
-cp .env.example .env.local
-```
-
-Edit `.env.local`:
-```env
-NEXT_PUBLIC_PRIVY_APP_ID=your_privy_app_id
-PRIVY_APP_SECRET=your_privy_app_secret
-MONGODB_URI=mongodb://localhost:27017/common-lobbyist
-```
-
-Get Privy credentials at [https://dashboard.privy.io](https://dashboard.privy.io)
-
-### 3. Start MongoDB
-
-```bash
-# macOS
-brew services start mongodb-community
-
-# Or use MongoDB Atlas cloud database
-```
-
-### 4. Verify Setup
-
-```bash
-npx tsx scripts/verify-setup.ts
-```
-
-### 5. Run Development Server
-
-```bash
-npm run dev
-```
-
-Visit [http://localhost:3000](http://localhost:3000)
 
 ## 📖 Documentation
 
@@ -248,15 +202,15 @@ common-lobbyist/
 
 ## 🛠️ Key Technologies
 
-| Layer | Technology |
-|-------|-----------|
-| Smart Contracts | Solidity 0.8.24, Hardhat |
-| Blockchain Client | Viem, Privy |
-| Frontend | Next.js 15, React 19, TypeScript |
-| Authentication | Privy (JWT + Wallet) |
-| Database | MongoDB, Mongoose |
-| Styling | Tailwind CSS |
-| Network | Base Sepolia (Testnet) |
+| Layer             | Technology                       |
+| ----------------- | -------------------------------- |
+| Smart Contracts   | Solidity 0.8.24, Hardhat         |
+| Blockchain Client | Viem, Privy                      |
+| Frontend          | Next.js 15, React 19, TypeScript |
+| Authentication    | Privy (JWT + Wallet)             |
+| Database          | MongoDB, Mongoose                |
+| Styling           | Tailwind CSS                     |
+| Network           | Base Sepolia (Testnet)           |
 
 ## 📊 Data Flow
 
@@ -284,6 +238,7 @@ Get Base Sepolia testnet ETH:
 [Base Sepolia Faucet](https://www.coinbase.com/faucets/base-ethereum-sepolia-faucet)
 
 Run tests:
+
 ```bash
 # Smart contract tests
 cd onchain
@@ -317,6 +272,7 @@ The Common Lobbyist Protocol implements a "place to remember, withdraw to forget
 ### Quadratic Voting
 
 Instead of 1 token = 1 vote, we use:
+
 ```
 weight = √(tokens_allocated)
 ```
@@ -326,6 +282,7 @@ This reduces the influence of large token holders and encourages broader partici
 ### Why IPFS?
 
 Content is stored on IPFS (InterPlanetary File System) for:
+
 - **Immutability** - Content can't be changed after creation
 - **Censorship Resistance** - No central point of failure
 - **Verifiability** - CID = hash of content
@@ -339,6 +296,7 @@ Content is stored on IPFS (InterPlanetary File System) for:
 ## 🤝 Contributing
 
 This is a protocol implementation. Feel free to:
+
 - Fork and extend
 - Report issues
 - Suggest improvements
