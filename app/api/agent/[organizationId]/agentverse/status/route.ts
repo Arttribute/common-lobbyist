@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import dbConnect from "@/lib/mongodb";
+import dbConnect from "@/lib/dbConnect";
 import Agent from "@/models/Agent";
 import { getAuthenticatedUser } from "@/lib/auth/middleware";
 import { getAgent, isAgentverseConfigured } from "@/lib/services/agentverse";
@@ -29,11 +29,23 @@ export async function GET(
       return NextResponse.json({ error: "Agent not found" }, { status: 404 });
     }
 
+    // Check configuration status
+    const configured = isAgentverseConfigured();
+
+    // Log for debugging
+    if (!configured) {
+      console.warn('Agentverse is not configured. AGENTVERSE_API_KEY environment variable is missing.');
+    }
+
     // Return local status if not registered or Agentverse not configured
-    if (!agent.agentverse?.registered || !isAgentverseConfigured()) {
+    if (!agent.agentverse?.registered || !configured) {
       return NextResponse.json({
         registered: false,
-        agentverseConfigured: isAgentverseConfigured(),
+        agentverseConfigured: configured,
+        debug: {
+          envVarCheck: !!process.env.AGENTVERSE_API_KEY,
+          message: configured ? 'Configuration OK' : 'Missing AGENTVERSE_API_KEY environment variable',
+        },
         localAgent: {
           id: agent._id,
           name: agent.name,

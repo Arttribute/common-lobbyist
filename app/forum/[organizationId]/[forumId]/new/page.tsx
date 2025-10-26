@@ -1,11 +1,12 @@
 // app/forum/[organizationId]/[forumId]/new/page.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Globe, Square } from "lucide-react";
 import ContentEditor, { ContentData } from "@/components/forum/content-editor";
+import AgentChatWidget, { AgentChatWidgetRef } from "@/components/agent/AgentChatWidget";
 import { useAuth } from "@/context/auth-context";
 import { Button } from "@/components/ui/button";
 import AccountMenu from "@/components/account/account-menu";
@@ -21,6 +22,7 @@ interface PageParams {
 export default function NewPostPage({ params }: PageParams) {
   const router = useRouter();
   const { authenticated, authState, login } = useAuth();
+  const chatWidgetRef = useRef<AgentChatWidgetRef>(null);
   const [resolvedParams, setResolvedParams] = useState<{
     organizationId: string;
     forumId: string;
@@ -89,6 +91,12 @@ export default function NewPostPage({ params }: PageParams) {
       alert("An error occurred. Please try again.");
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleGetThoughts = (content: string) => {
+    if (chatWidgetRef.current) {
+      chatWidgetRef.current.sendThoughtsQuery(content);
     }
   };
 
@@ -161,9 +169,20 @@ export default function NewPostPage({ params }: PageParams) {
                 : "Ask your question..."
             }
             buttonText={contentType === "post" ? "Publish" : "Create Poll"}
+            organizationId={resolvedParams.organizationId}
+            onGetThoughts={handleGetThoughts}
           />
         </div>
       </main>
+
+      {/* Agent Chat Widget */}
+      {dao && (
+        <AgentChatWidget
+          ref={chatWidgetRef}
+          organizationId={resolvedParams.organizationId}
+          organizationName={dao.name}
+        />
+      )}
     </div>
   );
 }

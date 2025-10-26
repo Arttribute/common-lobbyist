@@ -67,6 +67,12 @@ export default function AgentverseSettings({
       }
 
       const data = await response.json();
+      console.log('=== AgentverseSettings Debug ===');
+      console.log('Full status response:', data);
+      console.log('agentverseConfigured:', data.agentverseConfigured);
+      console.log('registered:', data.registered);
+      console.log('debug info:', data.debug);
+      console.log('===============================');
       setStatus(data);
     } catch (error) {
       console.error("Error loading Agentverse status:", error);

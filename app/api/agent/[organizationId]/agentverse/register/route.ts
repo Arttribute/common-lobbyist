@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import dbConnect from "@/lib/mongodb";
+import dbConnect from "@/lib/dbConnect";
 import Agent from "@/models/Agent";
 import Organization from "@/models/Organization";
 import { getAuthenticatedUser } from "@/lib/auth/middleware";

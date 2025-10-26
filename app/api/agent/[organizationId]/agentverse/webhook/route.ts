@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import dbConnect from "@/lib/mongodb";
+import dbConnect from "@/lib/dbConnect";
 import Agent from "@/models/Agent";
-import { runAgent } from "@/lib/services/agentcommons";
+import { agentCommonsService } from "@/lib/services/agentcommons";
 
 /**
  * POST /api/agent/[organizationId]/agentverse/webhook
@@ -64,16 +64,25 @@ Please respond appropriately based on the message content.`;
 
       // Run the agent with the message
       try {
-        const agentResponse = await runAgent(
-          agent.agentId!,
-          agent.sessionId!,
-          messageText,
-          context
-        );
+        const agentResponse = await agentCommonsService.runAgent({
+          agentId: agent.agentId!,
+          messages: [
+            {
+              role: "system",
+              content: context,
+            },
+            {
+              role: "user",
+              content: messageText,
+            },
+          ],
+          sessionId: agent.sessionId,
+          initiator: from,
+        });
 
         response = {
           success: true,
-          reply: agentResponse.response,
+          reply: agentResponse.sessionId || agentResponse,
         };
       } catch (error) {
         console.error("Error processing agent message:", error);

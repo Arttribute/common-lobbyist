@@ -3,7 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Providers from "@/Providers";
 import { AuthProvider } from "@/context/auth-context";
-import Navbar from "@/components/layout/navbar";
+import { Toaster } from "@/components/ui/toaster";
 import { Space_Mono } from "next/font/google";
 
 const space_mono = Space_Mono({
@@ -38,7 +38,10 @@ export default function RootLayout({
     <html lang="en">
       <body className={space_mono.className}>
         <Providers>
-          <AuthProvider>{children}</AuthProvider>
+          <AuthProvider>
+            {children}
+            <Toaster />
+          </AuthProvider>
         </Providers>
       </body>
     </html>

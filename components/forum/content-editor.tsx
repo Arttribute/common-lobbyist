@@ -3,6 +3,7 @@
 
 import { useState } from "react";
 import ContentInsights from "@/components/agent/ContentInsights";
+import GetThoughtsButton from "@/components/agent/GetThoughtsButton";
 import { Button } from "@/components/ui/button";
 
 interface ContentEditorProps {
@@ -12,6 +13,7 @@ interface ContentEditorProps {
   buttonText?: string;
   organizationId?: string;
   enableAgentInsights?: boolean;
+  onGetThoughts?: (content: string) => void;
 }
 
 export interface ContentData {
@@ -30,6 +32,7 @@ export default function ContentEditor({
   buttonText = "Publish",
   organizationId,
   enableAgentInsights = true,
+  onGetThoughts,
 }: ContentEditorProps) {
   const [title, setTitle] = useState("");
   const [text, setText] = useState("");
@@ -141,7 +144,16 @@ export default function ContentEditor({
           </div>
         )}
 
-      <div className="mt-8 pt-8 border-t border-neutral-200 dark:border-neutral-800 flex justify-end gap-3">
+      <div className="mt-8 pt-8 border-t border-neutral-200 dark:border-neutral-800 flex justify-between items-center">
+        <div>
+          {onGetThoughts && organizationId && (text.trim() || title.trim()) && (
+            <GetThoughtsButton
+              content={type === "post" ? `${title}\n\n${text}` : text}
+              organizationId={organizationId}
+              onGetThoughts={onGetThoughts}
+            />
+          )}
+        </div>
         <Button onClick={handleSubmit}>{buttonText}</Button>
       </div>
     </div>

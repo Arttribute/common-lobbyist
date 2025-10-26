@@ -3,8 +3,15 @@
  * Handles agent registration, discovery, and multiagent communication with Agentverse
  */
 
-const AGENTVERSE_API_BASE = process.env.AGENTVERSE_API_URL || 'https://agentverse.ai/v1';
-const AGENTVERSE_API_KEY = process.env.AGENTVERSE_API_KEY;
+// Helper functions to get env vars dynamically (not cached at module load time)
+// This ensures we always read the current environment variable value
+function getAgentverseApiBase(): string {
+  return process.env.AGENTVERSE_API_URL || 'https://agentverse.ai/v1';
+}
+
+function getAgentverseApiKey(): string | undefined {
+  return process.env.AGENTVERSE_API_KEY;
+}
 
 // Types based on Agentverse API documentation
 export interface AgentverseAgent {
@@ -105,11 +112,12 @@ export async function searchAgents(
   params: AgentSearchParams = {}
 ): Promise<AgentSearchResponse> {
   try {
-    const response = await fetch(`${AGENTVERSE_API_BASE}/search/agents`, {
+    const apiKey = getAgentverseApiKey();
+    const response = await fetch(`${getAgentverseApiBase()}/search/agents`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...(AGENTVERSE_API_KEY && { 'Authorization': `Bearer ${AGENTVERSE_API_KEY}` }),
+        ...(apiKey && { 'Authorization': `Bearer ${apiKey}` }),
       },
       body: JSON.stringify(params),
     });
@@ -132,16 +140,17 @@ export async function searchAgents(
 export async function registerAgent(
   params: AgentRegistrationParams
 ): Promise<AgentRegistrationResponse> {
-  if (!AGENTVERSE_API_KEY) {
+  const apiKey = getAgentverseApiKey();
+  if (!apiKey) {
     throw new Error('AGENTVERSE_API_KEY is not configured');
   }
 
   try {
-    const response = await fetch(`${AGENTVERSE_API_BASE}/agents`, {
+    const response = await fetch(`${getAgentverseApiBase()}/agents`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${AGENTVERSE_API_KEY}`,
+        'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify(params),
     });
@@ -165,16 +174,17 @@ export async function updateAgent(
   agentAddress: string,
   params: Partial<AgentRegistrationParams>
 ): Promise<AgentverseAgent> {
-  if (!AGENTVERSE_API_KEY) {
+  const apiKey = getAgentverseApiKey();
+  if (!apiKey) {
     throw new Error('AGENTVERSE_API_KEY is not configured');
   }
 
   try {
-    const response = await fetch(`${AGENTVERSE_API_BASE}/agents/${agentAddress}`, {
+    const response = await fetch(`${getAgentverseApiBase()}/agents/${agentAddress}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${AGENTVERSE_API_KEY}`,
+        'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify(params),
     });
@@ -196,11 +206,12 @@ export async function updateAgent(
  */
 export async function getAgent(agentAddress: string): Promise<AgentverseAgent> {
   try {
-    const response = await fetch(`${AGENTVERSE_API_BASE}/agents/${agentAddress}`, {
+    const apiKey = getAgentverseApiKey();
+    const response = await fetch(`${getAgentverseApiBase()}/agents/${agentAddress}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        ...(AGENTVERSE_API_KEY && { 'Authorization': `Bearer ${AGENTVERSE_API_KEY}` }),
+        ...(apiKey && { 'Authorization': `Bearer ${apiKey}` }),
       },
     });
 
@@ -220,15 +231,16 @@ export async function getAgent(agentAddress: string): Promise<AgentverseAgent> {
  * Delete an agent from Agentverse
  */
 export async function deleteAgent(agentAddress: string): Promise<{ success: boolean }> {
-  if (!AGENTVERSE_API_KEY) {
+  const apiKey = getAgentverseApiKey();
+  if (!apiKey) {
     throw new Error('AGENTVERSE_API_KEY is not configured');
   }
 
   try {
-    const response = await fetch(`${AGENTVERSE_API_BASE}/agents/${agentAddress}`, {
+    const response = await fetch(`${getAgentverseApiBase()}/agents/${agentAddress}`, {
       method: 'DELETE',
       headers: {
-        'Authorization': `Bearer ${AGENTVERSE_API_KEY}`,
+        'Authorization': `Bearer ${apiKey}`,
       },
     });
 
@@ -250,16 +262,17 @@ export async function deleteAgent(agentAddress: string): Promise<{ success: bool
 export async function sendAgentMessage(
   message: AgentMessage
 ): Promise<AgentMessageResponse> {
-  if (!AGENTVERSE_API_KEY) {
+  const apiKey = getAgentverseApiKey();
+  if (!apiKey) {
     throw new Error('AGENTVERSE_API_KEY is not configured');
   }
 
   try {
-    const response = await fetch(`${AGENTVERSE_API_BASE}/agents/messages`, {
+    const response = await fetch(`${getAgentverseApiBase()}/agents/messages`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${AGENTVERSE_API_KEY}`,
+        'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
         ...message,
@@ -296,17 +309,18 @@ export async function getAgentMessages(
   agentAddress: string,
   limit: number = 50
 ): Promise<AgentMessage[]> {
-  if (!AGENTVERSE_API_KEY) {
+  const apiKey = getAgentverseApiKey();
+  if (!apiKey) {
     throw new Error('AGENTVERSE_API_KEY is not configured');
   }
 
   try {
     const response = await fetch(
-      `${AGENTVERSE_API_BASE}/agents/${agentAddress}/messages?limit=${limit}`,
+      `${getAgentverseApiBase()}/agents/${agentAddress}/messages?limit=${limit}`,
       {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${AGENTVERSE_API_KEY}`,
+          'Authorization': `Bearer ${apiKey}`,
         },
       }
     );
@@ -395,7 +409,7 @@ This agent implements the ASI Chat Protocol and can communicate with other agent
  * Check if Agentverse is properly configured
  */
 export function isAgentverseConfigured(): boolean {
-  return !!AGENTVERSE_API_KEY;
+  return !!getAgentverseApiKey();
 }
 
 /**

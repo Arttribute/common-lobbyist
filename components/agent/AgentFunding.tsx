@@ -14,6 +14,7 @@ import {
 import { useAuth } from "@/context/auth-context";
 import { Address } from "viem";
 import { useCommonToken } from "@/lib/hooks/use-common-token";
+import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
 interface AgentFundingProps {
@@ -144,12 +145,12 @@ export default function AgentFunding({
   return (
     <div className="max-w-2xl space-y-6">
       {/* Balance Display */}
-      <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200 p-6">
+      <div className="bg-gray-50 rounded-lg border border-gray-200 p-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Wallet className="w-6 h-6 text-blue-600" />
+            <Wallet className="w-6 h-6" />
             <div>
-              <h3 className="font-semibold text-gray-900">Agent Balance</h3>
+              <h3 className="tracking-tight text-gray-900">Agent Balance</h3>
               <p className="text-xs text-gray-600">
                 $COMMON tokens available for agent operations
               </p>
@@ -339,10 +340,10 @@ export default function AgentFunding({
             </button>
           </div>
 
-          <button
+          <Button
             onClick={handleSend}
             disabled={!authenticated || isTransferPending || !amount}
-            className="w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+            className="w-full rounded-md"
           >
             {isTransferPending ? (
               <>
@@ -355,7 +356,7 @@ export default function AgentFunding({
                 {isCreator ? "Fund Agent" : "Donate"}
               </>
             )}
-          </button>
+          </Button>
 
           {transferHash && (
             <div className="text-xs text-gray-600 text-center">
