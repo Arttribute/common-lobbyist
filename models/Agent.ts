@@ -14,6 +14,18 @@ const AgentSchema = new mongoose.Schema(
     agentId: { type: String }, // AgentCommons agent ID
     enabled: { type: Boolean, default: true }, // Whether agent is active
 
+    // Agentverse integration
+    agentverse: {
+      registered: { type: Boolean, default: false }, // Whether agent is registered on Agentverse
+      address: { type: String }, // Agentverse agent address (e.g., agent1q...)
+      apiKey: { type: String }, // Agentverse API key for this agent
+      discoverable: { type: Boolean, default: true }, // Whether agent is discoverable on Agentverse
+      protocols: [{ type: String }], // Supported protocols (e.g., ['asi-chat'])
+      webhookUrl: { type: String }, // Webhook URL for receiving messages
+      lastSynced: { type: Date }, // Last sync with Agentverse
+      metadata: { type: mongoose.Schema.Types.Mixed }, // Additional Agentverse metadata
+    },
+
     // Agent configuration
     persona: { type: String }, // Agent persona/character
     instructions: { type: String }, // Custom instructions for agent
@@ -36,5 +48,6 @@ const AgentSchema = new mongoose.Schema(
 // Index for efficient queries
 AgentSchema.index({ organizationId: 1 });
 AgentSchema.index({ agentId: 1 }, { unique: true, sparse: true });
+AgentSchema.index({ "agentverse.address": 1 }, { unique: true, sparse: true });
 
 export default mongoose.models.Agent || mongoose.model("Agent", AgentSchema);
