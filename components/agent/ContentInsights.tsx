@@ -64,7 +64,7 @@ export default function ContentInsights({
     }
   };
 
-  if (!user) {
+  if (!authenticated) {
     return null;
   }
 

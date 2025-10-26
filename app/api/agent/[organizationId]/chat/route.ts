@@ -80,7 +80,7 @@ export async function POST(
               },
             ],
             sessionId: sessionId || agent.sessionId,
-            initiator: user.walletAddress,
+            initiator: user.walletAddress!,
           });
 
           for await (const chunk of agentStream) {

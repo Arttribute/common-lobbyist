@@ -47,6 +47,7 @@ export interface Organization {
   tokenName: string;
   tokenSymbol: string;
   initialSupply: string;
+  creatorAddress: string;
   onchain?: {
     chainId?: number;
     factory?: string;
@@ -57,4 +58,16 @@ export interface Organization {
     totalRaw?: string;
     totalQuadWeight?: string;
   };
+  agent?: {
+    agentId: string;
+    enabled: boolean;
+    persona: string;
+    instructions: string;
+    temperature: number;
+    maxTokens: number;
+    topP: number;
+    presencePenalty: number;
+    frequencyPenalty: number;
+    createdAt: Date;
+  } | null;
 }

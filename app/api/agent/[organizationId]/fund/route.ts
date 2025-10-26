@@ -14,16 +14,13 @@ import { agentCommonsService } from "@/lib/services/agentcommons";
 
 const COMMON_TOKEN_ADDRESS = "0x09d3e33fBeB985653bFE868eb5a62435fFA04e4F";
 
-// ✅ Define context type explicitly
-type RouteContext = {
-  params: {
-    organizationId: string;
-  };
-};
-
-export async function POST(request: NextRequest, context: RouteContext) {
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<{ organizationId: string }> }
+) {
   try {
-    const { organizationId } = context.params;
+    // Await params (Next.js 15 requirement)
+    const { organizationId } = await params;
 
     // Authenticate the user
     const user = await getAuthenticatedUser(request);
@@ -47,7 +44,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     // Get the default agent for this organization
     const agent = await Agent.findOne({
-      organizationId,
+      organizationId: organizationId,
       isDefault: true,
     });
 
@@ -58,9 +55,8 @@ export async function POST(request: NextRequest, context: RouteContext) {
       );
     }
 
-    // Parse request body
     const body = await request.json();
-    const { txHash } = body as { txHash?: string };
+    const { txHash } = body;
 
     if (!txHash) {
       return NextResponse.json(
@@ -69,10 +65,12 @@ export async function POST(request: NextRequest, context: RouteContext) {
       );
     }
 
-    // Agent wallet address (same as agentId)
+    // Get the agent's wallet address (agentId is the wallet address)
     const agentWalletAddress = agent.agentId;
 
-    // Success response (frontend handles the actual transfer)
+    // Return success with agent wallet info
+    // The actual token transfer happens on the frontend using wagmi
+    // We just verify the transaction and record it
     return NextResponse.json(
       {
         success: true,
