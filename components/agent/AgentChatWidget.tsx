@@ -1,11 +1,13 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from "react";
 import { Bot, X, Send, Minimize2, Maximize2, Heart, Coins } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
 import AgentFunding from "./AgentFunding";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
+import ReactMarkdown from "react-markdown";
 
 interface Message {
   role: "user" | "assistant";
@@ -18,21 +20,24 @@ interface AgentChatWidgetProps {
   organizationName: string;
 }
 
-export default function AgentChatWidget({
-  organizationId,
-  organizationName,
-}: AgentChatWidgetProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [isMinimized, setIsMinimized] = useState(false);
-  const [showDonateModal, setShowDonateModal] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [sessionId, setSessionId] = useState<string | null>(null);
-  const [balance, setBalance] = useState<number | null>(null);
-  const [agentId, setAgentId] = useState<string>("");
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const { authenticated, authState } = useAuth();
+export interface AgentChatWidgetRef {
+  sendThoughtsQuery: (content: string) => void;
+}
+
+const AgentChatWidget = forwardRef<AgentChatWidgetRef, AgentChatWidgetProps>(
+  ({ organizationId, organizationName }, ref) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const [isMinimized, setIsMinimized] = useState(false);
+    const [showDonateModal, setShowDonateModal] = useState(false);
+    const [messages, setMessages] = useState<Message[]>([]);
+    const [input, setInput] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
+    const [sessionId] = useState<string | null>(null);
+    const [balance, setBalance] = useState<number | null>(null);
+    const [isLoadingBalance, setIsLoadingBalance] = useState(true);
+    const [agentId, setAgentId] = useState<string>("");
+    const messagesEndRef = useRef<HTMLDivElement>(null);
+    const { authenticated, authState } = useAuth();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -50,6 +55,7 @@ export default function AgentChatWidget({
 
   const loadAgentBalance = async () => {
     try {
+      setIsLoadingBalance(true);
       const headers: Record<string, string> = {};
 
       // Add auth token if available
@@ -68,20 +74,35 @@ export default function AgentChatWidget({
       }
     } catch (error) {
       console.error("Error loading agent balance:", error);
+    } finally {
+      setIsLoadingBalance(false);
     }
   };
 
-  const sendMessage = async () => {
-    if (!input.trim() || isLoading || !authenticated) return;
+  // Expose method to send thoughts query from external components
+  useImperativeHandle(ref, () => ({
+    sendThoughtsQuery: (content: string) => {
+      setIsOpen(true);
+      setIsMinimized(false);
 
-    const userMessage: Message = {
-      role: "user",
-      content: input,
-      timestamp: new Date(),
-    };
+      const thoughtsPrompt = `Based on the collective memory and discussions in this DAO, please provide insights about the following content:\n\n${content}\n\nWhat are your thoughts on this from the community perspective?`;
 
-    setMessages((prev) => [...prev, userMessage]);
-    setInput("");
+      // Add user message to display
+      const userMessage: Message = {
+        role: "user",
+        content: "Get content thoughts",
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, userMessage]);
+
+      // Send the actual prompt to the agent
+      sendMessageWithContent(thoughtsPrompt);
+    },
+  }));
+
+  const sendMessageWithContent = async (messageContent: string) => {
+    if (!messageContent.trim() || isLoading || !authenticated) return;
+
     setIsLoading(true);
 
     try {
@@ -98,7 +119,7 @@ export default function AgentChatWidget({
         method: "POST",
         headers,
         body: JSON.stringify({
-          message: input,
+          message: messageContent,
           sessionId,
         }),
       });
@@ -170,6 +191,22 @@ export default function AgentChatWidget({
     }
   };
 
+  const sendMessage = async () => {
+    if (!input.trim() || isLoading || !authenticated) return;
+
+    const userMessage: Message = {
+      role: "user",
+      content: input,
+      timestamp: new Date(),
+    };
+
+    setMessages((prev) => [...prev, userMessage]);
+    const messageToSend = input;
+    setInput("");
+
+    await sendMessageWithContent(messageToSend);
+  };
+
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -227,12 +264,24 @@ export default function AgentChatWidget({
             </button>
           </div>
         </div>
-        {balance !== null && (
-          <div className="flex items-center gap-1 text-xs opacity-90">
+        <div className="flex items-center justify-between gap-2">
+          {isLoadingBalance ? (
+            <Skeleton className="h-4 w-24" />
+          ) : balance !== null ? (
+            <div className="flex items-center gap-1 text-xs opacity-90">
+              <Coins className="w-3 h-3" />
+              <span>{balance.toFixed(2)} $COMMON</span>
+            </div>
+          ) : null}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowDonateModal(true)}
+            className="h-6 px-2"
+          >
             <Coins className="w-3 h-3" />
-            <span>{balance.toFixed(2)} $COMMON</span>
-          </div>
-        )}
+          </Button>
+        </div>
       </div>
 
       {!isMinimized && (
@@ -266,16 +315,16 @@ export default function AgentChatWidget({
                       : "bg-gray-100 text-gray-900"
                   }`}
                 >
-                  <p className="text-sm whitespace-pre-wrap">
-                    {message.content}
-                  </p>
-                  <p
-                    className={`text-xs mt-1 ${
-                      message.role === "user"
-                        ? "text-gray-500"
-                        : "text-gray-500"
-                    }`}
-                  >
+                  {message.role === "assistant" ? (
+                    <div className="text-sm prose prose-sm max-w-none">
+                      <ReactMarkdown>{message.content}</ReactMarkdown>
+                    </div>
+                  ) : (
+                    <p className="text-sm whitespace-pre-wrap">
+                      {message.content}
+                    </p>
+                  )}
+                  <p className="text-xs mt-1 text-gray-500">
                     {message.timestamp.toLocaleTimeString([], {
                       hour: "2-digit",
                       minute: "2-digit",
@@ -354,4 +403,8 @@ export default function AgentChatWidget({
       )}
     </div>
   );
-}
+});
+
+AgentChatWidget.displayName = "AgentChatWidget";
+
+export default AgentChatWidget;

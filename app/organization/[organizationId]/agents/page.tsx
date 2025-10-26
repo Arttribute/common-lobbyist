@@ -17,6 +17,8 @@ import {
 import { useAuth } from "@/context/auth-context";
 import AgentFunding from "@/components/agent/AgentFunding";
 import AgentSettings from "@/components/agent/AgentSettings";
+import AgentversePanel from "@/components/agent/AgentversePanel";
+import { Button } from "@/components/ui/button";
 import type { Organization } from "@/types/forum";
 
 interface PageParams {
@@ -55,7 +57,7 @@ export default function AgentManagementPage({ params }: PageParams) {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<
-    "overview" | "funding" | "settings"
+    "overview" | "funding" | "settings" | "agentverse"
   >("overview");
   const [message, setMessage] = useState<{
     type: "success" | "error" | "info";
@@ -159,12 +161,15 @@ export default function AgentManagementPage({ params }: PageParams) {
               <ArrowLeft className="w-5 h-5" />
             </Link>
             <div className="flex items-center gap-3">
-              <Bot className="w-8 h-8 text-blue-600" />
+              <Bot className="w-8 h-8" />
               <div>
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                  Agent Management
-                </h1>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <div className="relative">
+                  <div className="bg-yellow-200 w-48 h-6 -mb-7 ml-1 rounded-sm"></div>
+                  <h1 className="text-2xl tracking-tight text-gray-900 dark:text-gray-100 relative">
+                    Agent Management
+                  </h1>
+                </div>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
                   Manage agents for {organization.name}
                 </p>
               </div>
@@ -204,10 +209,10 @@ export default function AgentManagementPage({ params }: PageParams) {
           )}
 
           {/* Tabs */}
-          <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
+          <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-1 overflow-x-auto">
             <button
               onClick={() => setActiveTab("overview")}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap ${
                 activeTab === "overview"
                   ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm"
                   : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
@@ -217,7 +222,7 @@ export default function AgentManagementPage({ params }: PageParams) {
             </button>
             <button
               onClick={() => setActiveTab("funding")}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap ${
                 activeTab === "funding"
                   ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm"
                   : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
@@ -228,7 +233,7 @@ export default function AgentManagementPage({ params }: PageParams) {
             </button>
             <button
               onClick={() => setActiveTab("settings")}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap ${
                 activeTab === "settings"
                   ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm"
                   : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
@@ -236,6 +241,17 @@ export default function AgentManagementPage({ params }: PageParams) {
             >
               <Settings className="w-4 h-4 inline mr-2" />
               Settings
+            </button>
+            <button
+              onClick={() => setActiveTab("agentverse")}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap ${
+                activeTab === "agentverse"
+                  ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm"
+                  : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
+              }`}
+            >
+              <Bot className="w-4 h-4 inline mr-2" />
+              Agentverse
             </button>
           </div>
         </div>
@@ -248,16 +264,16 @@ export default function AgentManagementPage({ params }: PageParams) {
             {/* Agents List */}
             <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-6">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                <h2 className="text-lg tracking-tight text-gray-900 dark:text-gray-100">
                   Your Agents ({agents.length})
                 </h2>
-                <button
+                <Button
                   onClick={() => setActiveTab("settings")}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
+                  className="flex items-center gap-2 rounded-md"
                 >
                   <Plus className="w-4 h-4" />
                   Create Agent
-                </button>
+                </Button>
               </div>
 
               {agents.length === 0 ? (
@@ -270,12 +286,12 @@ export default function AgentManagementPage({ params }: PageParams) {
                     Create your first agent to help your DAO members with
                     insights and discussions.
                   </p>
-                  <button
+                  <Button
                     onClick={() => setActiveTab("settings")}
-                    className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+                    className="rounded-md"
                   >
                     Create Agent
-                  </button>
+                  </Button>
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -331,8 +347,8 @@ export default function AgentManagementPage({ params }: PageParams) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-6">
                 <div className="flex items-center gap-3 mb-4">
-                  <Wallet className="w-6 h-6 text-green-600" />
-                  <h3 className="font-semibold text-gray-900 dark:text-gray-100">
+                  <Wallet className="w-6 h-6" />
+                  <h3 className="tracking-tight text-gray-900 dark:text-gray-100">
                     Agent Funding
                   </h3>
                 </div>
@@ -341,18 +357,19 @@ export default function AgentManagementPage({ params }: PageParams) {
                     "Manage your agent's $COMMON token balance to keep it operational."
                   }
                 </p>
-                <button
+                <Button
                   onClick={() => setActiveTab("funding")}
-                  className="w-full px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors"
+                  variant="outline"
+                  className="w-full rounded-md"
                 >
                   Manage Funding
-                </button>
+                </Button>
               </div>
 
               <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-6">
                 <div className="flex items-center gap-3 mb-4">
-                  <Settings className="w-6 h-6 text-blue-600" />
-                  <h3 className="font-semibold text-gray-900 dark:text-gray-100">
+                  <Settings className="w-6 h-6" />
+                  <h3 className="tracking-tight text-gray-900 dark:text-gray-100">
                     Agent Settings
                   </h3>
                 </div>
@@ -361,12 +378,13 @@ export default function AgentManagementPage({ params }: PageParams) {
                     "Configure your agent's personality, instructions, and behavior."
                   }
                 </p>
-                <button
+                <Button
                   onClick={() => setActiveTab("settings")}
-                  className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
+                  variant="outline"
+                  className="w-full rounded-md"
                 >
                   Configure Agent
-                </button>
+                </Button>
               </div>
             </div>
           </div>
@@ -379,6 +397,35 @@ export default function AgentManagementPage({ params }: PageParams) {
             agentId={defaultAgent.agentId}
             isCreator={true}
           />
+        )}
+
+        {activeTab === "settings" && organization && (
+          <AgentSettings
+            organizationId={resolvedParams.organizationId}
+            organizationName={organization.name}
+            isCreator={organization.creatorAddress?.toLowerCase() === authState.walletAddress?.toLowerCase()}
+            onUpdate={handleAgentUpdate}
+          />
+        )}
+
+        {activeTab === "agentverse" && defaultAgent && (
+          <div className="space-y-6">
+            <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-6">
+              <div className="mb-6">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                  Agentverse Integration
+                </h2>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Deploy your agent to Agentverse for multiagent communication,
+                  discoverability, and collaboration with other AI agents.
+                </p>
+              </div>
+              <AgentversePanel
+                organizationId={resolvedParams.organizationId}
+                agentName={defaultAgent.name}
+              />
+            </div>
+          </div>
         )}
       </main>
     </div>

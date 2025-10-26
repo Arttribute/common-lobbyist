@@ -11,12 +11,14 @@ import {
   Wallet,
 } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
+import { Button } from "@/components/ui/button";
 import AgentFunding from "./AgentFunding";
 
 interface AgentSettingsProps {
   organizationId: string;
   organizationName: string;
   isCreator: boolean;
+  onUpdate?: () => void;
 }
 
 type TabType = "configuration" | "funding";
@@ -151,9 +153,9 @@ export default function AgentSettings({
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex items-center gap-3 pb-4 border-b border-gray-200">
-        <Bot className="w-6 h-6 text-blue-600" />
+        <Bot className="w-6 h-6" />
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Agent Settings</h2>
+          <h2 className="text-2xl tracking-tight text-gray-900">Agent Settings</h2>
           <p className="text-sm text-gray-600">
             Configure the {organizationName} community agent
           </p>
@@ -165,9 +167,9 @@ export default function AgentSettings({
         <nav className="flex gap-4">
           <button
             onClick={() => setActiveTab("configuration")}
-            className={`px-4 py-2 font-medium text-sm transition-colors border-b-2 ${
+            className={`px-4 py-2 text-sm transition-colors border-b-2 ${
               activeTab === "configuration"
-                ? "border-blue-600 text-blue-600"
+                ? "border-black text-black"
                 : "border-transparent text-gray-600 hover:text-gray-900"
             }`}
           >
@@ -178,9 +180,9 @@ export default function AgentSettings({
           </button>
           <button
             onClick={() => setActiveTab("funding")}
-            className={`px-4 py-2 font-medium text-sm transition-colors border-b-2 ${
+            className={`px-4 py-2 text-sm transition-colors border-b-2 ${
               activeTab === "funding"
-                ? "border-blue-600 text-blue-600"
+                ? "border-black text-black"
                 : "border-transparent text-gray-600 hover:text-gray-900"
             }`}
           >
@@ -223,7 +225,7 @@ export default function AgentSettings({
           <div className="bg-white rounded-lg border border-gray-200 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="font-semibold text-gray-900">Agent Status</h3>
+                <h3 className="tracking-tight text-gray-900">Agent Status</h3>
                 <p className="text-sm text-gray-600 mt-1">
                   Enable or disable the agent for this DAO
                 </p>
@@ -243,7 +245,7 @@ export default function AgentSettings({
           {/* Persona */}
           <div className="bg-white rounded-lg border border-gray-200 p-6">
             <label className="block">
-              <span className="font-semibold text-gray-900 mb-2 block">
+              <span className="tracking-tight text-gray-900 mb-2 block">
                 Agent Persona
               </span>
               <p className="text-sm text-gray-600 mb-3">
@@ -263,7 +265,7 @@ export default function AgentSettings({
           {/* Instructions */}
           <div className="bg-white rounded-lg border border-gray-200 p-6">
             <label className="block">
-              <span className="font-semibold text-gray-900 mb-2 block">
+              <span className="tracking-tight text-gray-900 mb-2 block">
                 Agent Instructions
               </span>
               <p className="text-sm text-gray-600 mb-3">
@@ -282,7 +284,7 @@ export default function AgentSettings({
 
           {/* Advanced Settings */}
           <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h3 className="font-semibold text-gray-900 mb-4">
+            <h3 className="tracking-tight text-gray-900 mb-4">
               Advanced Settings
             </h3>
             <div className="space-y-4">
@@ -334,10 +336,10 @@ export default function AgentSettings({
 
           {/* Save Button */}
           <div className="flex justify-end">
-            <button
+            <Button
               onClick={handleSave}
               disabled={isSaving}
-              className="px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+              className="rounded-md"
             >
               {isSaving ? (
                 <>
@@ -350,7 +352,7 @@ export default function AgentSettings({
                   Save Configuration
                 </>
               )}
-            </button>
+            </Button>
           </div>
         </>
       )}
