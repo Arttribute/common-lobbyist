@@ -5,6 +5,7 @@ import Providers from "@/Providers";
 import { AuthProvider } from "@/context/auth-context";
 import { Toaster } from "@/components/ui/toaster";
 import { Space_Mono } from "next/font/google";
+import { Analytics } from "@vercel/analytics/react";
 
 const space_mono = Space_Mono({
   weight: ["400", "700"],
@@ -43,6 +44,7 @@ export default function RootLayout({
             <Toaster />
           </AuthProvider>
         </Providers>
+        <Analytics />
       </body>
     </html>
   );
