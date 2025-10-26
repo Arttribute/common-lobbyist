@@ -8,7 +8,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-white dark:bg-black">
       {/* Navbar */}
-      <div className="sticky top-0 z-50 flex justify-between items-center px-6 py-4">
+      <div className=" flex justify-between items-center px-6 py-4">
         {/* Logo and brand */}
         <div className="flex items-center">
           <Link
@@ -41,7 +41,7 @@ export default function Home() {
               community.
             </p>
             <Link
-              href="/organizations"
+              href="/new"
               className="inline-block px-16 py-2 bg-black dark:bg-white hover:bg-neutral-800 dark:hover:bg-neutral-200 text-white dark:text-black rounded-lg font-medium transition-colors"
             >
               Get started
