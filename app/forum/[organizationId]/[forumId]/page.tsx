@@ -2,14 +2,25 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Search, Bell, Square, Edit, ArrowUp, MessageCircle, Bookmark } from "lucide-react";
+import {
+  Search,
+  Bell,
+  Globe,
+  Edit,
+  ArrowUp,
+  MessageCircle,
+  Bookmark,
+} from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/context/auth-context";
 import TokenBalance from "@/components/dao/token-balance";
 import SignalButton from "@/components/forum/signal-button";
 import AgentChatWidget from "@/components/agent/AgentChatWidget";
 import AgentSetupPrompt from "@/components/agent/AgentSetupPrompt";
+import FundAgentButton from "@/components/agent/FundAgentButton";
 import type { Forum, Organization, ForumPost } from "@/types/forum";
+import AccountMenu from "@/components/account/account-menu";
+import RandomAvatar from "@/components/account/random-avatar";
 
 interface PageParams {
   params: Promise<{
@@ -68,7 +79,9 @@ export default function ForumPage({ params }: PageParams) {
         `/api/organization/forums/contents?forumId=${resolvedParams.forumId}`
       );
       const contentsData = await contentsRes.json();
-      const postsOnly = contentsData.filter((c: ForumPost) => c.type === "post");
+      const postsOnly = contentsData.filter(
+        (c: ForumPost) => c.type === "post"
+      );
       setPosts(postsOnly);
     } catch (error) {
       console.error("Error fetching forum data:", error);
@@ -76,7 +89,6 @@ export default function ForumPage({ params }: PageParams) {
       setLoading(false);
     }
   };
-
 
   if (loading || !resolvedParams) {
     return (
@@ -91,17 +103,12 @@ export default function ForumPage({ params }: PageParams) {
       {/* Medium-style Header */}
       <header className="sticky top-0 bg-white dark:bg-black border-b border-black dark:border-white z-50">
         <div className="max-w-[1336px] mx-auto px-6 h-[57px] flex items-center justify-between">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
             <Link href="/" className="flex items-center gap-2">
-              <Square className="w-11 h-11 fill-black dark:fill-white stroke-none" />
+              <Globe className="w-4 h-4" />
             </Link>
-            <div className="relative hidden md:block">
-              <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-500" />
-              <input
-                type="text"
-                placeholder="Search"
-                className="pl-10 pr-4 py-2 bg-neutral-100 dark:bg-neutral-900 rounded-full text-sm w-60 focus:outline-none"
-              />
+            <div>
+              <p className="text-base tracking-tight">{dao?.name}</p>
             </div>
           </div>
 
@@ -111,13 +118,12 @@ export default function ForumPage({ params }: PageParams) {
               href={`/forum/${resolvedParams.organizationId}/${resolvedParams.forumId}/new`}
               className="flex items-center gap-2 text-sm text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white"
             >
-              <Edit className="w-6 h-6" />
+              <Edit className="w-5 h-5" />
               <span className="hidden md:inline">Write</span>
             </Link>
-            <button className="text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white">
-              <Bell className="w-6 h-6" />
-            </button>
-            <div className="w-8 h-8 rounded-full bg-neutral-300 dark:bg-neutral-700"></div>
+            <div className="flex items-center">
+              <AccountMenu />
+            </div>
           </div>
         </div>
       </header>
@@ -126,7 +132,9 @@ export default function ForumPage({ params }: PageParams) {
       <main className="max-w-[1336px] mx-auto px-6 py-12">
         <div className="grid grid-cols-12 gap-12">
           <div className="col-span-12 lg:col-span-8">
-            <h1 className="text-4xl font-serif font-bold mb-8">{forum?.name || "Forum"}</h1>
+            <h1 className="text-4xl font-bold mb-8">
+              {forum?.name || "Forum"}
+            </h1>
 
             {/* Agent Setup Prompt */}
             {dao && !dao.agent?.agentId && (
@@ -134,7 +142,10 @@ export default function ForumPage({ params }: PageParams) {
                 <AgentSetupPrompt
                   organizationId={resolvedParams.organizationId}
                   organizationName={dao.name}
-                  isCreator={dao.creatorAddress?.toLowerCase() === authState.walletAddress?.toLowerCase()}
+                  isCreator={
+                    dao.creatorAddress?.toLowerCase() ===
+                    authState.walletAddress?.toLowerCase()
+                  }
                   onAgentCreated={fetchForumData}
                 />
               </div>
@@ -160,20 +171,26 @@ export default function ForumPage({ params }: PageParams) {
                     className="py-8 border-b border-neutral-200 dark:border-neutral-800"
                   >
                     <div className="flex items-start gap-3 mb-4">
-                      <div className="w-6 h-6 rounded-full bg-neutral-300 dark:bg-neutral-700" />
+                      <RandomAvatar username={post.authorId} size={24} />
                       <div className="flex-1">
                         <div className="flex items-center gap-2 text-sm">
                           <span className="font-medium text-neutral-900 dark:text-neutral-100">
                             {post.authorId.length > 20
-                              ? `${post.authorId.slice(0, 6)}...${post.authorId.slice(-4)}`
+                              ? `${post.authorId.slice(
+                                  0,
+                                  6
+                                )}...${post.authorId.slice(-4)}`
                               : post.authorId}
                           </span>
                           <span className="text-neutral-500">·</span>
                           <span className="text-neutral-500">
-                            {new Date(post.createdAt).toLocaleDateString("en-US", {
-                              month: "short",
-                              day: "numeric",
-                            })}
+                            {new Date(post.createdAt).toLocaleDateString(
+                              "en-US",
+                              {
+                                month: "short",
+                                day: "numeric",
+                              }
+                            )}
                           </span>
                         </div>
                       </div>
@@ -199,7 +216,11 @@ export default function ForumPage({ params }: PageParams) {
                             daoId={dao._id}
                             registryAddress={dao.onchain.registry}
                             tokenAddress={dao.onchain.token}
-                            currentSignals={post.onchain?.totalRaw || post.counters?.placedRaw || "0"}
+                            currentSignals={
+                              post.onchain?.totalRaw ||
+                              post.counters?.placedRaw ||
+                              "0"
+                            }
                             userSignal={
                               authState.walletAddress
                                 ? post.userSignals?.find(
@@ -222,7 +243,9 @@ export default function ForumPage({ params }: PageParams) {
                           className="flex items-center gap-2 text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors"
                         >
                           <MessageCircle className="w-6 h-6" />
-                          <span className="text-sm">{post.counters?.replies || 0}</span>
+                          <span className="text-sm">
+                            {post.counters?.replies || 0}
+                          </span>
                         </Link>
                       </div>
                       <button className="text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors">
@@ -237,17 +260,41 @@ export default function ForumPage({ params }: PageParams) {
 
           {/* Sidebar */}
           <aside className="hidden lg:block col-span-4">
-            <div className="sticky top-20">
-              <h3 className="text-base font-semibold mb-4">About this forum</h3>
-              <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-6">
-                {forum?.description || "Share your thoughts and engage in meaningful discussions."}
-              </p>
-              <Link
-                href={`/forum/${resolvedParams.organizationId}/${resolvedParams.forumId}/new`}
-                className="text-sm text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white"
-              >
-                Write a new post
-              </Link>
+            <div className="sticky top-20 space-y-6">
+              <div>
+                <h3 className="text-base font-semibold mb-4">
+                  About this forum
+                </h3>
+                <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-6">
+                  {forum?.description ||
+                    "Share your thoughts and engage in meaningful discussions."}
+                </p>
+                <Link
+                  href={`/forum/${resolvedParams.organizationId}/${resolvedParams.forumId}/new`}
+                  className="text-sm text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white"
+                >
+                  Write a new post
+                </Link>
+              </div>
+
+              {/* Fund Agent Section */}
+              {dao && dao.agent?.agentId && (
+                <div className="border border-gray-400 rounded-lg p-4">
+                  <h4 className="text-sm font-semibold mb-2">
+                    Support the Agent
+                  </h4>
+                  <p className="text-xs mb-3">
+                    Help keep the community agent running by funding it with
+                    $COMMON tokens.
+                  </p>
+                  <FundAgentButton
+                    organizationId={resolvedParams.organizationId}
+                    organizationName={dao.name}
+                    agentId={dao.agent.agentId}
+                    className="w-full"
+                  />
+                </div>
+              )}
             </div>
           </aside>
         </div>

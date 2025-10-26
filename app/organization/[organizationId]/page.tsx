@@ -2,11 +2,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Bot } from "lucide-react";
 import Link from "next/link";
 import ForumCard from "@/components/forum-card";
 import type { Organization, Forum } from "@/types/forum";
 import TokenBalance from "@/components/dao/token-balance";
+import AccountMenu from "@/components/account/account-menu";
 
 interface PageParams {
   params: Promise<{
@@ -111,8 +112,9 @@ export default function OrganizationPage({ params }: PageParams) {
   return (
     <div className="min-h-screen bg-white dark:bg-neutral-950">
       {/* Header */}
-      <header className="border-b border-neutral-200 dark:border-neutral-800">
-        <div className="max-w-4xl mx-auto px-6 py-4">
+      <div className="flex justify-between items-center px-6 py-4">
+        {/* Logo and brand */}
+        <div className="flex items-center">
           <Link
             href="/"
             className="inline-flex items-center gap-2 text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors"
@@ -121,14 +123,20 @@ export default function OrganizationPage({ params }: PageParams) {
             Back
           </Link>
         </div>
-      </header>
+        {/* Navigation links */}
+        <div className="hidden md:flex items-center space-x-6"></div>
+        {/* Account menu */}
+        <div className="flex items-center">
+          <AccountMenu />
+        </div>
+      </div>
 
       {/* Hero Section */}
       <section className="border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900">
         <div className="max-w-4xl mx-auto px-6 py-12">
           <div className="flex items-start justify-between gap-4 mb-6">
             <div className="flex-1">
-              <h1 className="text-4xl font-serif font-bold text-neutral-900 dark:text-neutral-100 mb-3">
+              <h1 className="text-4xl font-bold text-neutral-900 dark:text-neutral-100 mb-3">
                 {organization?.name || "Organization"}
               </h1>
               {organization?.description && (
@@ -137,12 +145,21 @@ export default function OrganizationPage({ params }: PageParams) {
                 </p>
               )}
             </div>
-            <button
-              onClick={() => setShowCreateForum(true)}
-              className="px-5 py-2 text-sm bg-neutral-900 dark:bg-neutral-100 hover:bg-neutral-800 dark:hover:bg-neutral-200 text-white dark:text-neutral-900 rounded-full font-medium transition-colors"
-            >
-              New Forum
-            </button>
+            <div className="flex gap-3">
+              <Link
+                href={`/organization/${resolvedParams.organizationId}/agents`}
+                className="flex items-center gap-2 px-5 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-full font-medium transition-colors"
+              >
+                <Bot className="w-4 h-4" />
+                Manage Agents
+              </Link>
+              <button
+                onClick={() => setShowCreateForum(true)}
+                className="px-5 py-2 text-sm bg-neutral-900 dark:bg-neutral-100 hover:bg-neutral-800 dark:hover:bg-neutral-200 text-white dark:text-neutral-900 rounded-full font-medium transition-colors"
+              >
+                New Forum
+              </button>
+            </div>
           </div>
 
           {/* Token Balance Display */}
@@ -188,7 +205,7 @@ export default function OrganizationPage({ params }: PageParams) {
       {showCreateForum && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-neutral-900 rounded-lg max-w-md w-full p-6">
-            <h2 className="text-xl font-serif font-bold text-neutral-900 dark:text-neutral-100 mb-4">
+            <h2 className="text-xl font-bold text-neutral-900 dark:text-neutral-100 mb-4">
               Create New Forum
             </h2>
             <form onSubmit={handleCreateForum} className="space-y-4">
@@ -257,7 +274,7 @@ export default function OrganizationPage({ params }: PageParams) {
           </div>
         ) : (
           <div className="space-y-6">
-            <h2 className="text-lg font-serif font-semibold text-neutral-900 dark:text-neutral-100">
+            <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
               Forums
             </h2>
             <div className="space-y-0">

@@ -1,9 +1,11 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { MessageCircle, X, Send, Minimize2, Maximize2, Heart, Coins } from "lucide-react";
+import { Bot, X, Send, Minimize2, Maximize2, Heart, Coins } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
 import AgentFunding from "./AgentFunding";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 interface Message {
   role: "user" | "assistant";
@@ -159,8 +161,7 @@ export default function AgentChatWidget({
         ...prev,
         {
           role: "assistant",
-          content:
-            "Sorry, I encountered an error. Please try again.",
+          content: "Sorry, I encountered an error. Please try again.",
           timestamp: new Date(),
         },
       ]);
@@ -180,25 +181,24 @@ export default function AgentChatWidget({
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 z-50 bg-blue-600 hover:bg-blue-700 text-white rounded-full p-4 shadow-lg transition-all duration-200 hover:scale-110"
+        className="fixed bottom-6 right-6 z-50 bg-white border border-black shadow-md hover:shadow-xl rounded-full p-4 shadow-lg transition-all duration-200 hover:scale-110"
         aria-label="Open agent chat"
       >
-        <MessageCircle className="w-6 h-6" />
+        <Bot className="w-6 h-6" />
       </button>
     );
   }
 
   return (
     <div
-      className={`fixed bottom-6 right-6 z-50 bg-white rounded-lg shadow-2xl border border-gray-200 transition-all duration-200 ${
+      className={`fixed bottom-6 right-6 z-50 bg-white rounded-lg shadow-2xl border border-black transition-all duration-200 ${
         isMinimized ? "w-80 h-16" : "w-96 h-[600px]"
       }`}
     >
       {/* Header */}
-      <div className="bg-blue-600 text-white p-4 rounded-t-lg">
+      <div className="bg-white p-4 rounded-t-lg border-b border-black">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
-            <MessageCircle className="w-5 h-5" />
             <div>
               <h3 className="font-semibold text-sm">
                 {organizationName} Agent
@@ -208,16 +208,8 @@ export default function AgentChatWidget({
           </div>
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setShowDonateModal(!showDonateModal)}
-              className="hover:bg-blue-700 rounded p-1 transition-colors"
-              aria-label="Support agent"
-              title="Support the agent"
-            >
-              <Heart className="w-4 h-4" />
-            </button>
-            <button
               onClick={() => setIsMinimized(!isMinimized)}
-              className="hover:bg-blue-700 rounded p-1 transition-colors"
+              className="hover:bg-gray-200 rounded p-1 transition-colors"
               aria-label={isMinimized ? "Maximize" : "Minimize"}
             >
               {isMinimized ? (
@@ -228,7 +220,7 @@ export default function AgentChatWidget({
             </button>
             <button
               onClick={() => setIsOpen(false)}
-              className="hover:bg-blue-700 rounded p-1 transition-colors"
+              className="hover:bg-gray-200 rounded p-1 transition-colors"
               aria-label="Close chat"
             >
               <X className="w-4 h-4" />
@@ -246,16 +238,17 @@ export default function AgentChatWidget({
       {!isMinimized && (
         <>
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4 h-[calc(600px-140px)]">
+          <div className="flex-1 overflow-y-auto p-4 space-y-4 h-[430px] bg-slate-50">
             {messages.length === 0 && (
               <div className="text-center text-gray-500 py-8">
-                <MessageCircle className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                <Bot className="w-12 h-12 mx-auto mb-3 opacity-50" />
                 <p className="text-sm">
-                  Hello! I'm the {organizationName} community agent.
+                  {` Hello! I'm the ${organizationName} community agent.`}
                 </p>
                 <p className="text-xs mt-2">
-                  Ask me about community priorities, proposals, or how
-                  your ideas align with our goals.
+                  {
+                    "Ask me about community priorities, proposals, or how your ideas align with our goals."
+                  }
                 </p>
               </div>
             )}
@@ -269,7 +262,7 @@ export default function AgentChatWidget({
                 <div
                   className={`max-w-[80%] rounded-lg p-3 ${
                     message.role === "user"
-                      ? "bg-blue-600 text-white"
+                      ? "bg-sky-100"
                       : "bg-gray-100 text-gray-900"
                   }`}
                 >
@@ -279,7 +272,7 @@ export default function AgentChatWidget({
                   <p
                     className={`text-xs mt-1 ${
                       message.role === "user"
-                        ? "text-blue-100"
+                        ? "text-gray-500"
                         : "text-gray-500"
                     }`}
                   >
@@ -312,30 +305,27 @@ export default function AgentChatWidget({
           </div>
 
           {/* Input */}
-          <div className="border-t border-gray-200 p-4">
+          <div className="border-t border-gray-400 p-4">
             {!authenticated ? (
               <div className="text-center text-sm text-gray-500">
                 Please connect your wallet to chat
               </div>
             ) : (
               <div className="flex gap-2">
-                <textarea
+                <Input
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  onKeyPress={handleKeyPress}
+                  onKeyDown={handleKeyPress}
                   placeholder="Ask the agent anything..."
-                  className="flex-1 resize-none rounded-lg border border-gray-300 p-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  rows={2}
                   disabled={isLoading}
                 />
-                <button
+                <Button
                   onClick={sendMessage}
                   disabled={!input.trim() || isLoading}
-                  className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-lg px-4 transition-colors"
                   aria-label="Send message"
                 >
                   <Send className="w-4 h-4" />
-                </button>
+                </Button>
               </div>
             )}
           </div>

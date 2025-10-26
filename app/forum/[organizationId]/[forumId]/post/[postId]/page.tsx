@@ -3,13 +3,26 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Search, Bell, ArrowUp, MessageCircle, Bookmark, Square, Edit } from "lucide-react";
+import {
+  Search,
+  Bell,
+  ArrowUp,
+  MessageCircle,
+  Bookmark,
+  Square,
+  Edit,
+  Globe,
+} from "lucide-react";
 import MarkdownRenderer from "@/components/forum/markdown-renderer";
 import { useAuth } from "@/context/auth-context";
 import type { ForumPost, Organization } from "@/types/forum";
 import TokenBalance from "@/components/dao/token-balance";
 import SignalButton from "@/components/forum/signal-button";
 import AgentChatWidget from "@/components/agent/AgentChatWidget";
+import FundAgentButton from "@/components/agent/FundAgentButton";
+import AccountMenu from "@/components/account/account-menu";
+import RandomAvatar from "@/components/account/random-avatar";
+import { Button } from "@/components/ui/button";
 
 interface PageParams {
   params: Promise<{
@@ -152,17 +165,12 @@ export default function PostDetailPage({ params }: PageParams) {
       {/* Medium-style Header */}
       <header className="sticky top-0 bg-white dark:bg-black border-b border-black dark:border-white z-50">
         <div className="max-w-[1336px] mx-auto px-6 h-[57px] flex items-center justify-between">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
             <Link href="/" className="flex items-center gap-2">
-              <Square className="w-11 h-11 fill-black dark:fill-white stroke-none" />
+              <Globe className="w-4 h-4" />
             </Link>
-            <div className="relative hidden md:block">
-              <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-500" />
-              <input
-                type="text"
-                placeholder="Search"
-                className="pl-10 pr-4 py-2 bg-neutral-100 dark:bg-neutral-900 rounded-full text-sm w-60 focus:outline-none"
-              />
+            <div>
+              <p className="text-base tracking-tight">{dao?.name}</p>
             </div>
           </div>
 
@@ -172,13 +180,12 @@ export default function PostDetailPage({ params }: PageParams) {
               href={`/forum/${resolvedParams.organizationId}/${resolvedParams.forumId}/new`}
               className="flex items-center gap-2 text-sm text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white"
             >
-              <Edit className="w-6 h-6" />
+              <Edit className="w-5 h-5" />
               <span className="hidden md:inline">Write</span>
             </Link>
-            <button className="text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white">
-              <Bell className="w-6 h-6" />
-            </button>
-            <div className="w-8 h-8 rounded-full bg-neutral-300 dark:bg-neutral-700"></div>
+            <div className="flex items-center">
+              <AccountMenu />
+            </div>
           </div>
         </div>
       </header>
@@ -187,13 +194,13 @@ export default function PostDetailPage({ params }: PageParams) {
       <main className="max-w-[1336px] mx-auto px-6 py-12">
         <article className="max-w-[680px] mx-auto">
           {/* Post Title */}
-          <h1 className="text-[42px] font-serif font-bold text-black dark:text-white mb-4 leading-tight">
+          <h1 className="text-[42px] font-bold text-black dark:text-white mb-4 leading-tight">
             {post.content.title}
           </h1>
 
           {/* Author Info */}
-          <div className="flex items-center gap-3 mb-8 pb-8 border-b border-neutral-200 dark:border-neutral-800">
-            <div className="w-12 h-12 rounded-full bg-neutral-300 dark:bg-neutral-700" />
+          <div className="flex items-center gap-3 mb-4 pb-4">
+            <RandomAvatar username={post.authorId} size={40} />
             <div>
               <div className="flex items-center gap-2">
                 <span className="font-medium text-black dark:text-white">
@@ -214,48 +221,13 @@ export default function PostDetailPage({ params }: PageParams) {
             </div>
           </div>
 
-          {/* Post Actions Bar */}
-          <div className="flex items-center justify-between mb-8 pb-8 border-b border-neutral-200 dark:border-neutral-800">
-            <div className="flex items-center gap-4">
-              {dao?.onchain?.registry && dao?.onchain?.token ? (
-                <SignalButton
-                  contentId={post._id}
-                  daoId={dao._id}
-                  registryAddress={dao.onchain.registry}
-                  tokenAddress={dao.onchain.token}
-                  currentSignals={post.onchain?.totalRaw || post.counters?.placedRaw || "0"}
-                  userSignal={
-                    authState.walletAddress
-                      ? post.userSignals?.find(
-                          (s) => s.userId === authState.walletAddress
-                        )?.amount
-                      : undefined
-                  }
-                  onSignalComplete={fetchPostData}
-                />
-              ) : (
-                <button className="flex items-center gap-2 text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors">
-                  <ArrowUp className="w-6 h-6" />
-                  <span className="text-sm">{post.counters?.placedRaw || "0"}</span>
-                </button>
-              )}
-              <button className="flex items-center gap-2 text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors">
-                <MessageCircle className="w-6 h-6" />
-                <span className="text-sm">{comments.length}</span>
-              </button>
-            </div>
-            <button className="text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors">
-              <Bookmark className="w-6 h-6" />
-            </button>
-          </div>
-
           {/* Post Body */}
           <div className="prose prose-lg prose-neutral dark:prose-invert max-w-none mb-12">
             <MarkdownRenderer content={post.content.text || ""} />
           </div>
 
           {/* Claps and Actions Footer */}
-          <div className="flex items-center justify-between py-8 border-t border-neutral-200 dark:border-neutral-800 mb-12">
+          <div className="flex items-center justify-between py-4 border-t border-neutral-200 dark:border-neutral-800 mb-12">
             <div className="flex items-center gap-4">
               {dao?.onchain?.registry && dao?.onchain?.token ? (
                 <SignalButton
@@ -263,7 +235,9 @@ export default function PostDetailPage({ params }: PageParams) {
                   daoId={dao._id}
                   registryAddress={dao.onchain.registry}
                   tokenAddress={dao.onchain.token}
-                  currentSignals={post.onchain?.totalRaw || post.counters?.placedRaw || "0"}
+                  currentSignals={
+                    post.onchain?.totalRaw || post.counters?.placedRaw || "0"
+                  }
                   userSignal={
                     authState.walletAddress
                       ? post.userSignals?.find(
@@ -276,7 +250,9 @@ export default function PostDetailPage({ params }: PageParams) {
               ) : (
                 <button className="flex items-center gap-2 text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors">
                   <ArrowUp className="w-6 h-6" />
-                  <span className="text-sm">{post.counters?.placedRaw || "0"}</span>
+                  <span className="text-sm">
+                    {post.counters?.placedRaw || "0"}
+                  </span>
                 </button>
               )}
               <button className="flex items-center gap-2 text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors">
@@ -284,37 +260,46 @@ export default function PostDetailPage({ params }: PageParams) {
                 <span className="text-sm">{comments.length}</span>
               </button>
             </div>
-            <button className="text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors">
-              <Bookmark className="w-6 h-6" />
-            </button>
+            <div className="flex items-center gap-4">
+              {/* Fund Agent Button */}
+              {dao && dao.agent?.agentId && (
+                <FundAgentButton
+                  organizationId={resolvedParams.organizationId}
+                  organizationName={dao.name}
+                  agentId={dao.agent.agentId}
+                />
+              )}
+              <button className="text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors">
+                <Bookmark className="w-6 h-6" />
+              </button>
+            </div>
           </div>
 
           {/* Comments Section */}
-          <div className="border-t border-neutral-200 dark:border-neutral-800 pt-12">
-            <h2 className="text-2xl font-bold mb-8">
+          <div className="pt-4">
+            <h2 className="text-base tracking-tight mb-8">
               Responses ({comments.length})
             </h2>
 
             {/* Reply Box */}
             <div className="mb-12">
               <div className="flex gap-3">
-                <div className="w-10 h-10 rounded-full bg-neutral-300 dark:bg-neutral-700 flex-shrink-0" />
+                <RandomAvatar username={authState.username || ""} size={30} />
                 <div className="flex-1">
                   <textarea
                     value={replyText}
                     onChange={(e) => setReplyText(e.target.value)}
                     placeholder="What are your thoughts?"
-                    className="w-full p-4 border border-neutral-200 dark:border-neutral-800 rounded-md bg-transparent focus:outline-none focus:border-neutral-900 dark:focus:border-neutral-100 resize-none text-base"
-                    rows={3}
+                    className="w-full p-4 border border-neutral-200 dark:border-neutral-800 rounded-md bg-transparent focus:outline-none focus:border-neutral-900 dark:focus:border-neutral-100 resize-none text-sm"
+                    rows={2}
                   />
                   <div className="flex justify-end mt-3">
-                    <button
+                    <Button
                       onClick={() => handleReply(null)}
                       disabled={!replyText.trim()}
-                      className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-400 disabled:cursor-not-allowed text-white rounded-full text-sm font-medium transition-colors"
                     >
                       Respond
-                    </button>
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -333,7 +318,7 @@ export default function PostDetailPage({ params }: PageParams) {
                     className="border-b border-neutral-200 dark:border-neutral-800 pb-8"
                   >
                     <div className="flex gap-3">
-                      <div className="w-10 h-10 rounded-full bg-neutral-300 dark:bg-neutral-700 flex-shrink-0" />
+                      <RandomAvatar username={comment.authorId} size={30} />
                       <div className="flex-1">
                         <div className="mb-2">
                           <span className="font-medium text-black dark:text-white">
@@ -350,7 +335,9 @@ export default function PostDetailPage({ params }: PageParams) {
                           </span>
                         </div>
                         <div className="prose prose-neutral dark:prose-invert max-w-none mb-4">
-                          <MarkdownRenderer content={comment.content.text || ""} />
+                          <MarkdownRenderer
+                            content={comment.content.text || ""}
+                          />
                         </div>
                         <div className="flex items-center gap-4">
                           {dao?.onchain?.registry && dao?.onchain?.token ? (
@@ -359,11 +346,16 @@ export default function PostDetailPage({ params }: PageParams) {
                               daoId={dao._id}
                               registryAddress={dao.onchain.registry}
                               tokenAddress={dao.onchain.token}
-                              currentSignals={comment.onchain?.totalRaw || comment.counters?.placedRaw || "0"}
+                              currentSignals={
+                                comment.onchain?.totalRaw ||
+                                comment.counters?.placedRaw ||
+                                "0"
+                              }
                               userSignal={
                                 authState.walletAddress
                                   ? comment.userSignals?.find(
-                                      (s) => s.userId === authState.walletAddress
+                                      (s) =>
+                                        s.userId === authState.walletAddress
                                     )?.amount
                                   : undefined
                               }
@@ -403,13 +395,12 @@ export default function PostDetailPage({ params }: PageParams) {
                               >
                                 Cancel
                               </button>
-                              <button
+                              <Button
                                 onClick={() => handleReply(comment._id)}
                                 disabled={!replyText.trim()}
-                                className="px-3 py-1 bg-green-600 hover:bg-green-700 disabled:bg-green-400 disabled:cursor-not-allowed text-white rounded-full text-sm"
                               >
                                 Reply
-                              </button>
+                              </Button>
                             </div>
                           </div>
                         )}

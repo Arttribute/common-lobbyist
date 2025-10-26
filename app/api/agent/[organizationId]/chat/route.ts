@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth/middleware";
 import dbConnect from "@/lib/dbConnect";
 import Organization from "@/models/Organization";
+import Agent from "@/models/Agent";
 import { agentCommonsService } from "@/lib/services/agentcommons";
 
 export async function POST(
@@ -31,7 +32,9 @@ export async function POST(
     await dbConnect();
 
     // Get the organization and its agent config
-    const organization = await Organization.findById(resolvedParams.organizationId);
+    const organization = await Organization.findById(
+      resolvedParams.organizationId
+    );
     if (!organization) {
       return NextResponse.json(
         { error: "Organization not found" },
@@ -39,7 +42,13 @@ export async function POST(
       );
     }
 
-    if (!organization.agent?.agentId || !organization.agent?.enabled) {
+    // Get the default agent for this organization
+    const agent = await Agent.findOne({
+      organizationId: resolvedParams.organizationId,
+      isDefault: true,
+    });
+
+    if (!agent?.agentId || !agent?.enabled) {
       return NextResponse.json(
         { error: "Agent not configured or disabled for this DAO" },
         { status: 400 }
@@ -63,24 +72,29 @@ export async function POST(
         try {
           // Stream the agent's response
           const agentStream = agentCommonsService.runAgentStream({
-            agentId: organization.agent.agentId!,
+            agentId: agent.agentId!,
             messages: [
               {
                 role: "user",
                 content: message,
               },
             ],
-            sessionId: sessionId || organization.agent.sessionId,
-            initiator: user.walletAddress,
+            sessionId: sessionId || agent.sessionId,
+            initiator: user.walletAddress!,
           });
 
           for await (const chunk of agentStream) {
-            const sseData = `data: ${JSON.stringify({ type: "token", content: chunk })}\n\n`;
+            const sseData = `data: ${JSON.stringify({
+              type: "token",
+              content: chunk,
+            })}\n\n`;
             controller.enqueue(encoder.encode(sseData));
           }
 
           // Send completion signal
-          const completionData = `data: ${JSON.stringify({ type: "done" })}\n\n`;
+          const completionData = `data: ${JSON.stringify({
+            type: "done",
+          })}\n\n`;
           controller.enqueue(encoder.encode(completionData));
           controller.close();
         } catch (error: any) {
@@ -93,7 +107,7 @@ export async function POST(
           const errorData = `data: ${JSON.stringify({
             type: "error",
             message: error.message || "Failed to stream response",
-            details: error.toString()
+            details: error.toString(),
           })}\n\n`;
           controller.enqueue(encoder.encode(errorData));
           controller.close();

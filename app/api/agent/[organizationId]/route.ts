@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth/middleware";
 import dbConnect from "@/lib/dbConnect";
 import Organization from "@/models/Organization";
+import Agent from "@/models/Agent";
 import { agentCommonsService } from "@/lib/services/agentcommons";
 
 /**
@@ -24,7 +25,9 @@ export async function GET(
 
     await dbConnect();
 
-    const organization = await Organization.findById(resolvedParams.organizationId);
+    const organization = await Organization.findById(
+      resolvedParams.organizationId
+    );
     if (!organization) {
       return NextResponse.json(
         { error: "Organization not found" },
@@ -32,7 +35,13 @@ export async function GET(
       );
     }
 
-    if (!organization.agent) {
+    // Get the default agent for this organization
+    const agent = await Agent.findOne({
+      organizationId: resolvedParams.organizationId,
+      isDefault: true,
+    });
+
+    if (!agent) {
       return NextResponse.json(
         { error: "Agent not configured" },
         { status: 404 }
@@ -42,16 +51,16 @@ export async function GET(
     return NextResponse.json(
       {
         agent: {
-          agentId: organization.agent.agentId,
-          enabled: organization.agent.enabled,
-          persona: organization.agent.persona,
-          instructions: organization.agent.instructions,
-          temperature: organization.agent.temperature,
-          maxTokens: organization.agent.maxTokens,
-          topP: organization.agent.topP,
-          presencePenalty: organization.agent.presencePenalty,
-          frequencyPenalty: organization.agent.frequencyPenalty,
-          createdAt: organization.agent.createdAt,
+          agentId: agent.agentId,
+          enabled: agent.enabled,
+          persona: agent.persona,
+          instructions: agent.instructions,
+          temperature: agent.temperature,
+          maxTokens: agent.maxTokens,
+          topP: agent.topP,
+          presencePenalty: agent.presencePenalty,
+          frequencyPenalty: agent.frequencyPenalty,
+          createdAt: agent.createdAt,
         },
       },
       { status: 200 }
@@ -88,7 +97,9 @@ export async function PUT(
 
     await dbConnect();
 
-    const organization = await Organization.findById(resolvedParams.organizationId);
+    const organization = await Organization.findById(
+      resolvedParams.organizationId
+    );
     if (!organization) {
       return NextResponse.json(
         { error: "Organization not found" },
@@ -107,6 +118,12 @@ export async function PUT(
       );
     }
 
+    // Get the default agent for this organization
+    let agent = await Agent.findOne({
+      organizationId: resolvedParams.organizationId,
+      isDefault: true,
+    });
+
     const body = await request.json();
     const {
       persona,
@@ -120,7 +137,7 @@ export async function PUT(
     } = body;
 
     // If agent doesn't exist, create one
-    if (!organization.agent?.agentId) {
+    if (!agent) {
       try {
         const agentPersona =
           persona || agentCommonsService.getDefaultPersona(organization.name);
@@ -128,7 +145,7 @@ export async function PUT(
           instructions ||
           agentCommonsService.getDefaultInstructions(organization.name);
 
-        const agent = await agentCommonsService.createAgent({
+        const agentCommonsAgent = await agentCommonsService.createAgent({
           name: `${organization.name} Community Agent`,
           persona: agentPersona,
           instructions: agentInstructions,
@@ -141,22 +158,30 @@ export async function PUT(
           commonsOwned: false,
         });
 
-        organization.agent = {
-          agentId: agent.agentId,
+        // Create agent document in database
+        agent = new Agent({
+          name: `${organization.name} Community Agent`,
+          organizationId: organization._id,
+          agentId: agentCommonsAgent.agentId,
           enabled: enabled ?? true,
           persona: agentPersona,
           instructions: agentInstructions,
-          temperature: agent.temperature,
-          maxTokens: agent.maxTokens,
-          topP: agent.topP,
-          presencePenalty: agent.presencePenalty,
-          frequencyPenalty: agent.frequencyPenalty,
-          createdAt: new Date(),
-        };
+          temperature: agentCommonsAgent.temperature,
+          maxTokens: agentCommonsAgent.maxTokens,
+          topP: agentCommonsAgent.topP,
+          presencePenalty: agentCommonsAgent.presencePenalty,
+          frequencyPenalty: agentCommonsAgent.frequencyPenalty,
+          createdBy: user.walletAddress,
+          isDefault: true,
+        });
 
+        await agent.save();
+
+        // Update the organization with default agent reference
+        organization.defaultAgentId = agent._id;
         await organization.save();
 
-        return NextResponse.json({ agent: organization.agent }, { status: 200 });
+        return NextResponse.json({ agent }, { status: 200 });
       } catch (error) {
         console.error("Error creating agent:", error);
         return NextResponse.json(
@@ -181,10 +206,7 @@ export async function PUT(
     // Update agent on AgentCommons if there are changes
     if (Object.keys(updateData).length > 0) {
       try {
-        await agentCommonsService.updateAgent(
-          organization.agent.agentId!,
-          updateData
-        );
+        await agentCommonsService.updateAgent(agent.agentId!, updateData);
       } catch (error) {
         console.error("Error updating agent on AgentCommons:", error);
         return NextResponse.json(
@@ -195,21 +217,19 @@ export async function PUT(
     }
 
     // Update local database
-    if (persona !== undefined) organization.agent.persona = persona;
-    if (instructions !== undefined)
-      organization.agent.instructions = instructions;
-    if (temperature !== undefined) organization.agent.temperature = temperature;
-    if (maxTokens !== undefined) organization.agent.maxTokens = maxTokens;
-    if (topP !== undefined) organization.agent.topP = topP;
-    if (presencePenalty !== undefined)
-      organization.agent.presencePenalty = presencePenalty;
+    if (persona !== undefined) agent.persona = persona;
+    if (instructions !== undefined) agent.instructions = instructions;
+    if (temperature !== undefined) agent.temperature = temperature;
+    if (maxTokens !== undefined) agent.maxTokens = maxTokens;
+    if (topP !== undefined) agent.topP = topP;
+    if (presencePenalty !== undefined) agent.presencePenalty = presencePenalty;
     if (frequencyPenalty !== undefined)
-      organization.agent.frequencyPenalty = frequencyPenalty;
-    if (enabled !== undefined) organization.agent.enabled = enabled;
+      agent.frequencyPenalty = frequencyPenalty;
+    if (enabled !== undefined) agent.enabled = enabled;
 
-    await organization.save();
+    await agent.save();
 
-    return NextResponse.json({ agent: organization.agent }, { status: 200 });
+    return NextResponse.json({ agent }, { status: 200 });
   } catch (error) {
     console.error("Error updating agent config:", error);
     return NextResponse.json(

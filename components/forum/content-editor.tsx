@@ -3,6 +3,7 @@
 
 import { useState } from "react";
 import ContentInsights from "@/components/agent/ContentInsights";
+import { Button } from "@/components/ui/button";
 
 interface ContentEditorProps {
   type: "post" | "comment" | "poll";
@@ -129,22 +130,19 @@ export default function ContentEditor({
       )}
 
       {/* Agent Insights */}
-      {enableAgentInsights && organizationId && (text.trim() || title.trim()) && (
-        <div className="mt-6">
-          <ContentInsights
-            organizationId={organizationId}
-            content={type === "post" ? `${title}\n\n${text}` : text}
-          />
-        </div>
-      )}
+      {enableAgentInsights &&
+        organizationId &&
+        (text.trim() || title.trim()) && (
+          <div className="mt-6">
+            <ContentInsights
+              organizationId={organizationId}
+              content={type === "post" ? `${title}\n\n${text}` : text}
+            />
+          </div>
+        )}
 
       <div className="mt-8 pt-8 border-t border-neutral-200 dark:border-neutral-800 flex justify-end gap-3">
-        <button
-          onClick={handleSubmit}
-          className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-full text-sm font-medium transition-colors"
-        >
-          {buttonText}
-        </button>
+        <Button onClick={handleSubmit}>{buttonText}</Button>
       </div>
     </div>
   );

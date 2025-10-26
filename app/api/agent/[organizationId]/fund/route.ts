@@ -9,15 +9,19 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth/middleware";
 import dbConnect from "@/lib/dbConnect";
 import Organization from "@/models/Organization";
+import Agent from "@/models/Agent";
 import { agentCommonsService } from "@/lib/services/agentcommons";
 
 const COMMON_TOKEN_ADDRESS = "0x09d3e33fBeB985653bFE868eb5a62435fFA04e4F";
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { organizationId: string } }
+  { params }: { params: Promise<{ organizationId: string }> }
 ) {
   try {
+    // Await params (Next.js 15 requirement)
+    const { organizationId } = await params;
+
     // Authenticate the user
     const user = await getAuthenticatedUser(request);
     if (!user || !user.walletAddress) {
@@ -30,7 +34,7 @@ export async function POST(
     await dbConnect();
 
     // Get the organization and its agent config
-    const organization = await Organization.findById(params.organizationId);
+    const organization = await Organization.findById(organizationId);
     if (!organization) {
       return NextResponse.json(
         { error: "Organization not found" },
@@ -38,7 +42,13 @@ export async function POST(
       );
     }
 
-    if (!organization.agent?.agentId || !organization.agent?.enabled) {
+    // Get the default agent for this organization
+    const agent = await Agent.findOne({
+      organizationId: organizationId,
+      isDefault: true,
+    });
+
+    if (!agent?.agentId || !agent?.enabled) {
       return NextResponse.json(
         { error: "Agent not configured or disabled for this DAO" },
         { status: 400 }
@@ -56,7 +66,7 @@ export async function POST(
     }
 
     // Get the agent's wallet address (agentId is the wallet address)
-    const agentWalletAddress = organization.agent.agentId;
+    const agentWalletAddress = agent.agentId;
 
     // Return success with agent wallet info
     // The actual token transfer happens on the frontend using wagmi

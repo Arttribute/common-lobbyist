@@ -1,4 +1,5 @@
 import CommonTokenFaucet from "@/components/common-token/CommonTokenFaucet";
+import Link from "next/link";
 
 export default function FaucetPage() {
   return (
@@ -17,12 +18,12 @@ export default function FaucetPage() {
 
         {/* Back Link */}
         <div className="mt-8 text-center">
-          <a
+          <Link
             href="/"
             className="text-blue-600 hover:text-blue-800 transition-colors text-sm"
           >
             ← Back to Home
-          </a>
+          </Link>
         </div>
       </div>
     </div>

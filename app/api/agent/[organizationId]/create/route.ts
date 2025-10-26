@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth/middleware";
 import dbConnect from "@/lib/dbConnect";
 import Organization from "@/models/Organization";
+import Agent from "@/models/Agent";
 import { agentCommonsService } from "@/lib/services/agentcommons";
 
 export async function POST(
@@ -31,7 +32,9 @@ export async function POST(
     await dbConnect();
 
     // Get the organization
-    const organization = await Organization.findById(resolvedParams.organizationId);
+    const organization = await Organization.findById(
+      resolvedParams.organizationId
+    );
     if (!organization) {
       return NextResponse.json(
         { error: "Organization not found" },
@@ -82,8 +85,10 @@ export async function POST(
 
     console.log("Agent created successfully:", agent.agentId);
 
-    // Update the organization with agent details
-    organization.agent = {
+    // Create agent document in database
+    const newAgent = new Agent({
+      name: `${organization.name} Community Agent`,
+      organizationId: organization._id,
       agentId: agent.agentId,
       enabled: true,
       persona: agentPersona,
@@ -93,9 +98,14 @@ export async function POST(
       topP: agent.topP,
       presencePenalty: agent.presencePenalty,
       frequencyPenalty: agent.frequencyPenalty,
-      createdAt: new Date(),
-    };
+      createdBy: user.walletAddress,
+      isDefault: true,
+    });
 
+    await newAgent.save();
+
+    // Update the organization with default agent reference
+    organization.defaultAgentId = newAgent._id;
     await organization.save();
 
     return NextResponse.json(

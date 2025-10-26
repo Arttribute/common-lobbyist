@@ -4,9 +4,12 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Square } from "lucide-react";
+import { Globe, Square } from "lucide-react";
 import ContentEditor, { ContentData } from "@/components/forum/content-editor";
 import { useAuth } from "@/context/auth-context";
+import { Button } from "@/components/ui/button";
+import AccountMenu from "@/components/account/account-menu";
+import { Organization } from "@/types/organization";
 
 interface PageParams {
   params: Promise<{
@@ -24,9 +27,25 @@ export default function NewPostPage({ params }: PageParams) {
   } | null>(null);
   const [contentType, setContentType] = useState<"post" | "poll">("post");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [dao, setDao] = useState<Organization | null>(null);
 
   useEffect(() => {
-    params.then(setResolvedParams);
+    params.then(async (resolved) => {
+      setResolvedParams(resolved);
+
+      try {
+        const daoRes = await fetch(
+          `/api/organization/${resolved.organizationId}`
+        );
+        const dao = await daoRes.json();
+        setDao(dao);
+        // You could use the DAO details here if needed, e.g:
+        // const dao = await daoRes.json();
+      } catch (error) {
+        alert("Failed to fetch DAO details");
+        return;
+      }
+    });
   }, [params]);
 
   const handleCreateContent = async (data: ContentData) => {
@@ -86,22 +105,22 @@ export default function NewPostPage({ params }: PageParams) {
       {/* Simple Header */}
       <header className="sticky top-0 bg-white dark:bg-black border-b border-black dark:border-white z-50">
         <div className="max-w-[1336px] mx-auto px-6 h-[57px] flex items-center justify-between">
-          <Link
-            href={`/forum/${resolvedParams.organizationId}/${resolvedParams.forumId}`}
-            className="flex items-center gap-2"
-          >
-            <Square className="w-11 h-11 fill-black dark:fill-white stroke-none" />
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link href="/" className="flex items-center gap-2">
+              <Globe className="w-4 h-4" />
+            </Link>
+            <div>
+              <p className="text-base tracking-tight">{dao?.name}</p>
+            </div>
+          </div>
 
           <div className="flex items-center gap-4">
-            <button
-              onClick={() => handleCreateContent}
-              disabled={isSubmitting}
-              className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white rounded-full text-sm font-medium transition-colors"
-            >
+            <Button onClick={() => handleCreateContent} disabled={isSubmitting}>
               {isSubmitting ? "Publishing..." : "Publish"}
-            </button>
-            <div className="w-8 h-8 rounded-full bg-neutral-300 dark:bg-neutral-700"></div>
+            </Button>
+            <div className="flex items-center">
+              <AccountMenu />
+            </div>
           </div>
         </div>
       </header>
