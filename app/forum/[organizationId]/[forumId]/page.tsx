@@ -20,6 +20,7 @@ import AgentSetupPrompt from "@/components/agent/AgentSetupPrompt";
 import FundAgentButton from "@/components/agent/FundAgentButton";
 import type { Forum, Organization, ForumPost } from "@/types/forum";
 import AccountMenu from "@/components/account/account-menu";
+import RandomAvatar from "@/components/account/random-avatar";
 
 interface PageParams {
   params: Promise<{
@@ -102,12 +103,12 @@ export default function ForumPage({ params }: PageParams) {
       {/* Medium-style Header */}
       <header className="sticky top-0 bg-white dark:bg-black border-b border-black dark:border-white z-50">
         <div className="max-w-[1336px] mx-auto px-6 h-[57px] flex items-center justify-between">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
             <Link href="/" className="flex items-center gap-2">
-              <Globe className="w-5 h-5" />
+              <Globe className="w-4 h-4" />
             </Link>
             <div>
-              <p className="text-base font-[600] tracking-tight">{dao?.name}</p>
+              <p className="text-base tracking-tight">{dao?.name}</p>
             </div>
           </div>
 
@@ -131,7 +132,7 @@ export default function ForumPage({ params }: PageParams) {
       <main className="max-w-[1336px] mx-auto px-6 py-12">
         <div className="grid grid-cols-12 gap-12">
           <div className="col-span-12 lg:col-span-8">
-            <h1 className="text-4xl font-serif font-bold mb-8">
+            <h1 className="text-4xl font-bold mb-8">
               {forum?.name || "Forum"}
             </h1>
 
@@ -170,7 +171,7 @@ export default function ForumPage({ params }: PageParams) {
                     className="py-8 border-b border-neutral-200 dark:border-neutral-800"
                   >
                     <div className="flex items-start gap-3 mb-4">
-                      <div className="w-6 h-6 rounded-full bg-neutral-300 dark:bg-neutral-700" />
+                      <RandomAvatar username={post.authorId} size={24} />
                       <div className="flex-1">
                         <div className="flex items-center gap-2 text-sm">
                           <span className="font-medium text-neutral-900 dark:text-neutral-100">

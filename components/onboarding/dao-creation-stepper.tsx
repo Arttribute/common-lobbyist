@@ -90,7 +90,7 @@ export function DAOCreationStepper() {
     {
       id: "dao-details",
       title: "DAO Details",
-      description: "Basic information and governance token",
+      description: "DAO & token details",
       status:
         currentStep === 0
           ? "current"
@@ -360,15 +360,12 @@ export function DAOCreationStepper() {
 
   return (
     <div className="min-h-screen bg-white dark:bg-neutral-950">
-      <main className="max-w-4xl mx-auto px-6 py-12">
+      <main className="max-w-4xl mx-auto px-6 py-4">
         <div className="mb-10">
-          <h1 className="text-3xl font-serif font-bold text-neutral-900 dark:text-neutral-100 mb-3">
-            Create a new DAO
-          </h1>
-          <p className="text-base text-neutral-600 dark:text-neutral-400 leading-relaxed">
-            Set up your Common Lobbyist DAO with governance token, community
-            agent, and discussion forum.
-          </p>
+          <div className="">
+            <div className="bg-teal-200 w-64 h-7 -mb-8 ml-2 rounded-sm"></div>
+            <h1 className="text-3xl tracking-tight mb-3">Create a new DAO</h1>
+          </div>
         </div>
 
         {!authenticated && (
@@ -385,64 +382,69 @@ export function DAOCreationStepper() {
           </div>
         )}
 
-        <div className="bg-white dark:bg-neutral-900 rounded-lg border border-gray-200 dark:border-gray-800 p-8">
-          <Stepper steps={steps} currentStep={currentStep} />
+        <div>
+          {/*<Stepper steps={steps as any} currentStep={currentStep} />*/}
+          <div className="flex justify-center mt-3 ">
+            <div className="border border-black max-w-2xl rounded-sm">
+              <StepperContent className="px-8">
+                {currentStep === 0 && (
+                  <DAODetailsStep
+                    data={creationState.daoDetails}
+                    onChange={updateDAODetails}
+                    errors={errors.daoDetails}
+                    disabled={loading}
+                  />
+                )}
+                {currentStep === 1 && (
+                  <AgentCreationStep
+                    data={creationState.agent}
+                    onChange={updateAgent}
+                    errors={errors.agent}
+                    disabled={loading}
+                    daoName={creationState.daoDetails.name}
+                  />
+                )}
+                {currentStep === 2 && (
+                  <ForumCreationStep
+                    data={creationState.forum}
+                    onChange={updateForum}
+                    errors={errors.forum}
+                    disabled={loading}
+                    daoName={creationState.daoDetails.name}
+                  />
+                )}
+              </StepperContent>
 
-          <StepperContent>
-            {currentStep === 0 && (
-              <DAODetailsStep
-                data={creationState.daoDetails}
-                onChange={updateDAODetails}
-                errors={errors.daoDetails}
-                disabled={loading}
-              />
-            )}
-            {currentStep === 1 && (
-              <AgentCreationStep
-                data={creationState.agent}
-                onChange={updateAgent}
-                errors={errors.agent}
-                disabled={loading}
-                daoName={creationState.daoDetails.name}
-              />
-            )}
-            {currentStep === 2 && (
-              <ForumCreationStep
-                data={creationState.forum}
-                onChange={updateForum}
-                errors={errors.forum}
-                disabled={loading}
-                daoName={creationState.daoDetails.name}
-              />
-            )}
-          </StepperContent>
+              <StepperActions className="border-black p-4">
+                <div className="flex justify-between w-full">
+                  <Button
+                    variant="outline"
+                    onClick={handlePrevious}
+                    disabled={currentStep === 0 || loading}
+                    className="px-10"
+                  >
+                    Previous
+                  </Button>
 
-          <StepperActions>
-            <div className="flex justify-between w-full">
-              <Button
-                variant="outline"
-                onClick={handlePrevious}
-                disabled={currentStep === 0 || loading}
-              >
-                Previous
-              </Button>
-
-              <Button
-                onClick={handleNext}
-                disabled={loading || !authenticated || !isConnected}
-              >
-                {loading
-                  ? "Creating..."
-                  : currentStep === steps.length - 1
-                  ? "Create DAO"
-                  : "Next"}
-              </Button>
+                  <Button
+                    onClick={handleNext}
+                    disabled={loading || !authenticated || !isConnected}
+                    className="px-12"
+                  >
+                    {loading
+                      ? "Creating..."
+                      : currentStep === steps.length - 1
+                      ? "Create DAO"
+                      : "Next"}
+                  </Button>
+                </div>
+              </StepperActions>
             </div>
-          </StepperActions>
+          </div>
 
           {/* Status Messages */}
           {loading && (
-            <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+            <div className="mt-3 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
               <p className="text-sm text-blue-800 dark:text-blue-200">
                 ⏳ Creating your DAO... Please confirm any transactions in your
                 wallet.
@@ -451,7 +453,7 @@ export function DAOCreationStepper() {
           )}
 
           {contractError && (
-            <div className="mt-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+            <div className="mt-3 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
               <p className="text-sm text-red-800 dark:text-red-200">
                 Error: {contractError}
               </p>

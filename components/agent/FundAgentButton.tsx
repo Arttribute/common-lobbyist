@@ -13,7 +13,12 @@ import {
 import { useAuth } from "@/context/auth-context";
 import { Address } from "viem";
 import { useCommonToken } from "@/lib/hooks/use-common-token";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 interface FundAgentButtonProps {
   organizationId: string;
@@ -157,171 +162,157 @@ export default function FundAgentButton({
             )}
           </button>
         </DialogTrigger>
+
         <DialogContent>
           <div className="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              {/* Header */}
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-gray-900">
-                  Fund {organizationName} Agent
-                </h2>
-                <button
-                  onClick={() => setIsOpen(false)}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  ×
-                </button>
-              </div>
-
-              {/* Agent Balance */}
-              <div className="bg-blue-50 rounded-lg p-4 mb-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Wallet className="w-5 h-5 text-blue-600" />
-                    <span className="text-sm font-medium text-gray-900">
-                      Agent Balance
-                    </span>
-                  </div>
-                  {isLoadingBalance ? (
-                    <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
-                  ) : (
-                    <span className={`text-lg font-bold ${getBalanceColor()}`}>
-                      {balance !== null ? formatBalance(balance) : "---"}{" "}
-                      $COMMON
-                    </span>
-                  )}
+            <DialogTitle>Fund {organizationName} Agent</DialogTitle>
+            {/* Agent Balance */}
+            <div className="bg-blue-50 rounded-lg p-4 mb-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Wallet className="w-5 h-5 text-blue-600" />
+                  <span className="text-sm font-medium text-gray-900">
+                    Agent Balance
+                  </span>
                 </div>
-                {balance !== null && balance < 10 && (
-                  <div className="mt-2 flex items-center gap-2 text-sm text-red-600">
-                    <AlertCircle className="w-4 h-4" />
-                    Low balance - agent may stop working soon
-                  </div>
+                {isLoadingBalance ? (
+                  <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
+                ) : (
+                  <span className={`text-lg font-bold ${getBalanceColor()}`}>
+                    {balance !== null ? formatBalance(balance) : "---"} $COMMON
+                  </span>
                 )}
               </div>
-
-              {/* User Balance */}
-              <div className="bg-gray-50 rounded-lg p-4 mb-6">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-gray-900">
-                    Your Balance
-                  </span>
-                  {isLoadingUserBalance ? (
-                    <Loader2 className="w-4 h-4 animate-spin text-gray-600" />
-                  ) : (
-                    <span className="text-lg font-bold text-gray-900">
-                      {parseFloat(userCommonBalance || "0").toFixed(2)} $COMMON
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              {/* Message */}
-              {message && (
-                <div
-                  className={`rounded-lg p-3 mb-4 flex items-center gap-2 ${
-                    message.type === "success"
-                      ? "bg-green-50 border border-green-200"
-                      : message.type === "error"
-                      ? "bg-red-50 border border-red-200"
-                      : "bg-blue-50 border border-blue-200"
-                  }`}
-                >
-                  {message.type === "success" ? (
-                    <CheckCircle className="w-4 h-4 text-green-600" />
-                  ) : message.type === "error" ? (
-                    <AlertCircle className="w-4 h-4 text-red-600" />
-                  ) : (
-                    <Info className="w-4 h-4 text-blue-600" />
-                  )}
-                  <span
-                    className={`text-sm ${
-                      message.type === "success"
-                        ? "text-green-800"
-                        : message.type === "error"
-                        ? "text-red-800"
-                        : "text-blue-800"
-                    }`}
-                  >
-                    {message.text}
-                  </span>
+              {balance !== null && balance < 10 && (
+                <div className="mt-2 flex items-center gap-2 text-sm text-red-600">
+                  <AlertCircle className="w-4 h-4" />
+                  Low balance - agent may stop working soon
                 </div>
               )}
+            </div>
 
-              {/* Funding Form */}
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Amount ($COMMON)
-                  </label>
-                  <input
-                    type="number"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    placeholder="0.00"
-                    step="0.01"
-                    min="0"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-
-                {/* Quick Amount Buttons */}
-                <div className="flex gap-2">
-                  {[10, 50, 100, 500].map((quickAmount) => (
-                    <button
-                      key={quickAmount}
-                      onClick={() => setAmount(quickAmount.toString())}
-                      className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-                    >
-                      {quickAmount}
-                    </button>
-                  ))}
-                </div>
-
-                <button
-                  onClick={handleSend}
-                  disabled={!authenticated || isTransferPending || !amount}
-                  className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
-                >
-                  {isTransferPending ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Processing...
-                    </>
-                  ) : (
-                    <>
-                      <Send className="w-4 h-4" />
-                      Send Tokens
-                    </>
-                  )}
-                </button>
-
-                {transferHash && (
-                  <div className="text-xs text-gray-600 text-center">
-                    Transaction:{" "}
-                    <a
-                      href={`https://basescan.org/tx/${transferHash}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:underline font-mono"
-                    >
-                      {transferHash.slice(0, 10)}...{transferHash.slice(-8)}
-                    </a>
-                  </div>
+            {/* User Balance */}
+            <div className="bg-gray-50 rounded-lg p-4 mb-6">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-gray-900">
+                  Your Balance
+                </span>
+                {isLoadingUserBalance ? (
+                  <Loader2 className="w-4 h-4 animate-spin text-gray-600" />
+                ) : (
+                  <span className="text-lg font-bold text-gray-900">
+                    {parseFloat(userCommonBalance || "0").toFixed(2)} $COMMON
+                  </span>
                 )}
               </div>
+            </div>
 
-              {/* Info */}
-              <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-3">
-                <div className="flex items-start gap-2">
-                  <Info className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
-                  <div className="text-xs text-blue-800">
-                    <p className="font-medium mb-1">About Agent Funding</p>
-                    <p>
-                      Your contribution helps keep the agent operational for all
-                      DAO members. Each chat interaction consumes a small amount
-                      of tokens.
-                    </p>
-                  </div>
+            {/* Message */}
+            {message && (
+              <div
+                className={`rounded-lg p-3 mb-4 flex items-center gap-2 ${
+                  message.type === "success"
+                    ? "bg-green-50 border border-green-200"
+                    : message.type === "error"
+                    ? "bg-red-50 border border-red-200"
+                    : "bg-blue-50 border border-blue-200"
+                }`}
+              >
+                {message.type === "success" ? (
+                  <CheckCircle className="w-4 h-4 text-green-600" />
+                ) : message.type === "error" ? (
+                  <AlertCircle className="w-4 h-4 text-red-600" />
+                ) : (
+                  <Info className="w-4 h-4 text-blue-600" />
+                )}
+                <span
+                  className={`text-sm ${
+                    message.type === "success"
+                      ? "text-green-800"
+                      : message.type === "error"
+                      ? "text-red-800"
+                      : "text-blue-800"
+                  }`}
+                >
+                  {message.text}
+                </span>
+              </div>
+            )}
+
+            {/* Funding Form */}
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Amount ($COMMON)
+                </label>
+                <input
+                  type="number"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  placeholder="0.00"
+                  step="0.01"
+                  min="0"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              {/* Quick Amount Buttons */}
+              <div className="flex gap-2">
+                {[10, 50, 100, 500].map((quickAmount) => (
+                  <button
+                    key={quickAmount}
+                    onClick={() => setAmount(quickAmount.toString())}
+                    className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                  >
+                    {quickAmount}
+                  </button>
+                ))}
+              </div>
+
+              <button
+                onClick={handleSend}
+                disabled={!authenticated || isTransferPending || !amount}
+                className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+              >
+                {isTransferPending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-4 h-4" />
+                    Send Tokens
+                  </>
+                )}
+              </button>
+
+              {transferHash && (
+                <div className="text-xs text-gray-600 text-center">
+                  Transaction:{" "}
+                  <a
+                    href={`https://basescan.org/tx/${transferHash}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline font-mono"
+                  >
+                    {transferHash.slice(0, 10)}...{transferHash.slice(-8)}
+                  </a>
+                </div>
+              )}
+            </div>
+
+            {/* Info */}
+            <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <div className="flex items-start gap-2">
+                <Info className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                <div className="text-xs text-blue-800">
+                  <p className="font-medium mb-1">About Agent Funding</p>
+                  <p>
+                    Your contribution helps keep the agent operational for all
+                    DAO members. Each chat interaction consumes a small amount
+                    of tokens.
+                  </p>
                 </div>
               </div>
             </div>

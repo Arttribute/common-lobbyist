@@ -30,10 +30,13 @@ export function DAODetailsStep({
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
-          DAO Details
-        </h2>
-        <p className="text-gray-600 dark:text-gray-400">
+        <div className="">
+          <div className="bg-yellow-200 w-48 h-6 -mb-7 ml-1 rounded-sm"></div>
+          <h2 className="text-xl tracking-tight text-gray-900 dark:text-gray-100 mb-2">
+            Basic DAO Details
+          </h2>
+        </div>
+        <p className="text-gray-600 text-sm dark:text-gray-400">
           Set up your DAO's basic information and governance token.
         </p>
       </div>
@@ -86,13 +89,12 @@ export function DAODetailsStep({
         </div>
 
         {/* Token Details Section */}
-        <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+        <div className=" dark:border-gray-700 pt-3">
+          <h3 className="text-lg tracking-tight text-gray-900 dark:text-gray-100 mb-4">
             Governance Token Details
           </h3>
-
-          <div className="space-y-4">
-            <div>
+          <div className="grid grid-cols-3 gap-1">
+            <div className="col-span-1">
               <Label
                 htmlFor="tokenName"
                 className="text-sm font-medium text-gray-700 dark:text-gray-300"
@@ -114,7 +116,7 @@ export function DAODetailsStep({
               )}
             </div>
 
-            <div>
+            <div className="col-span-1">
               <Label
                 htmlFor="tokenSymbol"
                 className="text-sm font-medium text-gray-700 dark:text-gray-300"
@@ -129,7 +131,6 @@ export function DAODetailsStep({
                   onChange({ tokenSymbol: e.target.value.toUpperCase() })
                 }
                 placeholder="e.g. EGT"
-                maxLength={6}
                 className="mt-1"
                 required
                 disabled={disabled}
@@ -141,7 +142,7 @@ export function DAODetailsStep({
               )}
             </div>
 
-            <div>
+            <div className="col-span-1">
               <Label
                 htmlFor="initialSupply"
                 className="text-sm font-medium text-gray-700 dark:text-gray-300"
@@ -169,16 +170,6 @@ export function DAODetailsStep({
               )}
             </div>
           </div>
-        </div>
-
-        {/* Network Info */}
-        <div className="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            <strong>Network:</strong> Base Sepolia (Testnet)
-          </p>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-            <strong>Factory Contract:</strong> Will be deployed automatically
-          </p>
         </div>
       </div>
     </div>

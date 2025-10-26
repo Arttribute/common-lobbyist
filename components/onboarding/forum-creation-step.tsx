@@ -51,13 +51,12 @@ export function ForumCreationStep({
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
-          DAO Forum
-        </h2>
-        <p className="text-gray-600 dark:text-gray-400">
-          Create a discussion forum where your DAO members can propose ideas,
-          vote on proposals, and build consensus.
-        </p>
+        <div className="">
+          <div className="bg-emerald-200 w-44 h-6 -mb-7 ml-1 rounded-sm"></div>
+          <h2 className="text-lg tracking-tight text-gray-900 dark:text-gray-100 mb-2">
+            DAO Discussion Forum
+          </h2>
+        </div>
       </div>
 
       <div className="space-y-6">
@@ -141,74 +140,6 @@ export function ForumCreationStep({
           {errors?.description && (
             <p className="mt-1 text-sm text-red-600">{errors.description}</p>
           )}
-        </div>
-
-        {/* Forum Features */}
-        <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-            Forum Features
-          </h3>
-
-          <div className="space-y-3">
-            <div className="flex items-center space-x-3">
-              <div className="flex-shrink-0">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              </div>
-              <div className="text-sm text-gray-700 dark:text-gray-300">
-                <strong>Quadratic Voting:</strong> Members can signal support
-                for proposals with weighted votes
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-3">
-              <div className="flex-shrink-0">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              </div>
-              <div className="text-sm text-gray-700 dark:text-gray-300">
-                <strong>AI Agent Integration:</strong> Your community agent will
-                provide insights and analysis
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-3">
-              <div className="flex-shrink-0">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              </div>
-              <div className="text-sm text-gray-700 dark:text-gray-300">
-                <strong>Signal Registry:</strong> Track community sentiment and
-                proposal history on-chain
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-3">
-              <div className="flex-shrink-0">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              </div>
-              <div className="text-sm text-gray-700 dark:text-gray-300">
-                <strong>Sybil Resistance:</strong> Built-in protection against
-                spam and manipulation
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Forum Preview */}
-        <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
-          <h4 className="text-sm font-medium text-green-900 dark:text-green-100 mb-2">
-            Forum Preview
-          </h4>
-          <div className="text-sm text-green-800 dark:text-green-200">
-            <p>
-              <strong>Name:</strong> {data.name || "Main Discussion"}
-            </p>
-            <p>
-              <strong>URL:</strong> /forum/{data.slug || "main-discussion"}
-            </p>
-            <p>
-              <strong>Description:</strong>{" "}
-              {data.description || "No description provided"}
-            </p>
-          </div>
         </div>
       </div>
     </div>
