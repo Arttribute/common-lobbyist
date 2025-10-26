@@ -14,11 +14,17 @@ import { agentCommonsService } from "@/lib/services/agentcommons";
 
 const COMMON_TOKEN_ADDRESS = "0x09d3e33fBeB985653bFE868eb5a62435fFA04e4F";
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { organizationId: string } }
-) {
+// ✅ Define context type explicitly
+type RouteContext = {
+  params: {
+    organizationId: string;
+  };
+};
+
+export async function POST(request: NextRequest, context: RouteContext) {
   try {
+    const { organizationId } = context.params;
+
     // Authenticate the user
     const user = await getAuthenticatedUser(request);
     if (!user || !user.walletAddress) {
@@ -31,7 +37,7 @@ export async function POST(
     await dbConnect();
 
     // Get the organization and its agent config
-    const organization = await Organization.findById(params.organizationId);
+    const organization = await Organization.findById(organizationId);
     if (!organization) {
       return NextResponse.json(
         { error: "Organization not found" },
@@ -41,7 +47,7 @@ export async function POST(
 
     // Get the default agent for this organization
     const agent = await Agent.findOne({
-      organizationId: params.organizationId,
+      organizationId,
       isDefault: true,
     });
 
@@ -52,8 +58,9 @@ export async function POST(
       );
     }
 
+    // Parse request body
     const body = await request.json();
-    const { txHash } = body;
+    const { txHash } = body as { txHash?: string };
 
     if (!txHash) {
       return NextResponse.json(
@@ -62,12 +69,10 @@ export async function POST(
       );
     }
 
-    // Get the agent's wallet address (agentId is the wallet address)
+    // Agent wallet address (same as agentId)
     const agentWalletAddress = agent.agentId;
 
-    // Return success with agent wallet info
-    // The actual token transfer happens on the frontend using wagmi
-    // We just verify the transaction and record it
+    // Success response (frontend handles the actual transfer)
     return NextResponse.json(
       {
         success: true,
