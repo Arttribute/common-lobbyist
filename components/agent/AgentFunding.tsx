@@ -1,7 +1,16 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Wallet, Send, Loader2, AlertCircle, CheckCircle, Info, Droplets, ExternalLink } from "lucide-react";
+import {
+  Wallet,
+  Send,
+  Loader2,
+  AlertCircle,
+  CheckCircle,
+  Info,
+  Droplets,
+  ExternalLink,
+} from "lucide-react";
 import { useAuth } from "@/context/auth-context";
 import { Address } from "viem";
 import { useCommonToken } from "@/lib/hooks/use-common-token";
@@ -29,12 +38,21 @@ export default function AgentFunding({
     text: string;
   } | null>(null);
   const { authenticated, authState } = useAuth();
-  const { useCommonBalance, transferTokens, isTransferPending, transferHash, transferError } = useCommonToken();
+  const {
+    useCommonBalance,
+    transferTokens,
+    isTransferPending,
+    transferHash,
+    transferError,
+  } = useCommonToken();
 
   const userAddress = authState.walletAddress as Address | undefined;
-  const { balance: userCommonBalance, isLoading: isLoadingUserBalance } = useCommonBalance(userAddress);
+  const { balance: userCommonBalance, isLoading: isLoadingUserBalance } =
+    useCommonBalance(userAddress);
 
-  const [lastTransferHash, setLastTransferHash] = useState<Address | null>(null);
+  const [lastTransferHash, setLastTransferHash] = useState<Address | null>(
+    null
+  );
 
   useEffect(() => {
     loadAgentBalance();
@@ -42,7 +60,11 @@ export default function AgentFunding({
 
   // Handle successful transfer
   useEffect(() => {
-    if (transferHash && transferHash !== lastTransferHash && !isTransferPending) {
+    if (
+      transferHash &&
+      transferHash !== lastTransferHash &&
+      !isTransferPending
+    ) {
       setLastTransferHash(transferHash);
       showMessage("success", "Tokens sent successfully!");
       setAmount("");
@@ -152,7 +174,8 @@ export default function AgentFunding({
             <div className="text-sm text-red-800">
               <p className="font-medium">Low Balance Warning</p>
               <p className="text-xs mt-1">
-                Agent balance is low. Fund the agent to ensure continuous operation.
+                Agent balance is low. Fund the agent to ensure continuous
+                operation.
               </p>
             </div>
           </div>
@@ -186,10 +209,10 @@ export default function AgentFunding({
           <div className="flex items-center gap-3">
             <Wallet className="w-5 h-5 text-purple-600" />
             <div>
-              <h3 className="font-medium text-gray-900">Your $COMMON Balance</h3>
-              <p className="text-xs text-gray-600">
-                Available in your wallet
-              </p>
+              <h3 className="font-medium text-gray-900">
+                Your $COMMON Balance
+              </h3>
+              <p className="text-xs text-gray-600">Available in your wallet</p>
             </div>
           </div>
           {isLoadingUserBalance ? (
@@ -357,7 +380,7 @@ export default function AgentFunding({
           <p className="font-medium mb-1">About Agent Costs</p>
           <ul className="text-xs space-y-1 text-blue-800">
             <li>• Chat interactions are free for DAO members</li>
-            <li>• The agent's wallet pays for all operations</li>
+            <li>• {"The agent's wallet pays for all operations"}</li>
             <li>• Costs vary based on message length and complexity</li>
             <li>
               • {isCreator ? "Keep" : "Help keep"} the agent funded to ensure

@@ -39,16 +39,13 @@ export default function AgentSetupPrompt({
         headers["Authorization"] = `Bearer ${authState.idToken}`;
       }
 
-      const response = await fetch(
-        `/api/agent/${organizationId}/create`,
-        {
-          method: "POST",
-          headers,
-          body: JSON.stringify({
-            persona: persona.trim() || undefined,
-          }),
-        }
-      );
+      const response = await fetch(`/api/agent/${organizationId}/create`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          persona: persona.trim() || undefined,
+        }),
+      });
 
       if (!response.ok) {
         const error = await response.json();
@@ -89,8 +86,9 @@ export default function AgentSetupPrompt({
               Agent Not Available
             </h3>
             <p className="text-sm text-amber-800">
-              This DAO doesn't have a community agent configured yet. Please
-              contact the DAO creator to set up the agent.
+              {
+                "This DAO doesn't have a community agent configured yet. Please contact the DAO creator to set up the agent."
+              }
             </p>
           </div>
         </div>

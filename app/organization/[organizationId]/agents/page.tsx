@@ -337,8 +337,9 @@ export default function AgentManagementPage({ params }: PageParams) {
                   </h3>
                 </div>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                  Manage your agent's $COMMON token balance to keep it
-                  operational.
+                  {
+                    "Manage your agent's $COMMON token balance to keep it operational."
+                  }
                 </p>
                 <button
                   onClick={() => setActiveTab("funding")}
@@ -356,8 +357,9 @@ export default function AgentManagementPage({ params }: PageParams) {
                   </h3>
                 </div>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                  Configure your agent's personality, instructions, and
-                  behavior.
+                  {
+                    "Configure your agent's personality, instructions, and behavior."
+                  }
                 </p>
                 <button
                   onClick={() => setActiveTab("settings")}
@@ -376,13 +378,6 @@ export default function AgentManagementPage({ params }: PageParams) {
             organizationName={organization.name}
             agentId={defaultAgent.agentId}
             isCreator={true}
-          />
-        )}
-
-        {activeTab === "settings" && (
-          <AgentSettings
-            organizationId={resolvedParams.organizationId}
-            onAgentUpdated={handleAgentUpdate}
           />
         )}
       </main>

@@ -37,7 +37,7 @@ export function DAODetailsStep({
           </h2>
         </div>
         <p className="text-gray-600 text-sm dark:text-gray-400">
-          Set up your DAO's basic information and governance token.
+          {"Set up your DAO's basic information and governance token."}
         </p>
       </div>
 

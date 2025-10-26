@@ -89,8 +89,9 @@ export function AgentCreationStep({
             disabled={disabled}
           />
           <p className="mt-1 text-xs text-gray-500">
-            Define your agent's personality, values, and approach to help guide
-            community discussions.
+            {
+              "Define your agent's personality, values, and approach to help guide community discussions."
+            }
           </p>
           {errors?.persona && (
             <p className="mt-1 text-sm text-red-600">{errors.persona}</p>
