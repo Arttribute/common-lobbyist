@@ -243,11 +243,12 @@ export default function AgentChatWidget({
               <div className="text-center text-gray-500 py-8">
                 <Bot className="w-12 h-12 mx-auto mb-3 opacity-50" />
                 <p className="text-sm">
-                  Hello! I'm the {organizationName} community agent.
+                  {` Hello! I'm the ${organizationName} community agent.`}
                 </p>
                 <p className="text-xs mt-2">
-                  Ask me about community priorities, proposals, or how your
-                  ideas align with our goals.
+                  {
+                    "Ask me about community priorities, proposals, or how your ideas align with our goals."
+                  }
                 </p>
               </div>
             )}
