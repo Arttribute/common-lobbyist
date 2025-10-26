@@ -19,6 +19,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 interface FundAgentButtonProps {
   organizationId: string;
@@ -151,16 +152,13 @@ export default function FundAgentButton({
     <>
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogTrigger asChild>
-          <button
-            onClick={() => setIsOpen(true)}
-            className={`flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors ${className}`}
-          >
+          <Button onClick={() => setIsOpen(true)} variant="outline">
             <Wallet className="w-4 h-4" />
             Fund Agent
             {balance !== null && balance < 10 && (
               <AlertCircle className="w-3 h-3 text-yellow-300" />
             )}
-          </button>
+          </Button>
         </DialogTrigger>
 
         <DialogContent>

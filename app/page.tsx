@@ -8,7 +8,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-white dark:bg-black">
       {/* Navbar */}
-      <div className="flex justify-between items-center px-6 py-4">
+      <div className="sticky top-0 z-50 flex justify-between items-center px-6 py-4">
         {/* Logo and brand */}
         <div className="flex items-center">
           <Link

@@ -279,11 +279,11 @@ export default function ForumPage({ params }: PageParams) {
 
               {/* Fund Agent Section */}
               {dao && dao.agent?.agentId && (
-                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-                  <h4 className="text-sm font-semibold text-blue-900 dark:text-blue-100 mb-2">
+                <div className="border border-gray-400 rounded-lg p-4">
+                  <h4 className="text-sm font-semibold mb-2">
                     Support the Agent
                   </h4>
-                  <p className="text-xs text-blue-700 dark:text-blue-300 mb-3">
+                  <p className="text-xs mb-3">
                     Help keep the community agent running by funding it with
                     $COMMON tokens.
                   </p>
