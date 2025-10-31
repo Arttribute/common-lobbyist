@@ -10,7 +10,9 @@ import { getAuthenticatedUser } from "@/lib/auth/middleware";
 import dbConnect from "@/lib/dbConnect";
 import Organization from "@/models/Organization";
 import Agent from "@/models/Agent";
+import ChatSession from "@/models/ChatSession";
 import { agentCommonsService } from "@/lib/services/agentcommons";
+import { v4 as uuidv4 } from "uuid";
 
 export async function POST(
   request: NextRequest,
@@ -56,13 +58,65 @@ export async function POST(
     }
 
     const body = await request.json();
-    const { message, sessionId, daoId } = body;
+    const { message, sessionId, daoId, title } = body;
 
     if (!message) {
       return NextResponse.json(
         { error: "Message is required" },
         { status: 400 }
       );
+    }
+
+    // Handle session management
+    let currentSessionId = sessionId;
+    let chatSession;
+
+    if (sessionId) {
+      // Update existing session
+      chatSession = await ChatSession.findOneAndUpdate(
+        {
+          sessionId,
+          owner: user.walletAddress,
+        },
+        {
+          $set: {
+            lastMessageAt: new Date(),
+            ...(title && { title }),
+          },
+          $inc: {
+            messageCount: 1,
+          },
+        },
+        { new: true }
+      );
+
+      if (!chatSession) {
+        // Session not found, create a new one
+        currentSessionId = uuidv4();
+        chatSession = await ChatSession.create({
+          sessionId: currentSessionId,
+          organizationId: resolvedParams.organizationId,
+          agentId: agent._id,
+          userId: user.userId || user.walletAddress,
+          owner: user.walletAddress,
+          title: title || "New Chat",
+          lastMessageAt: new Date(),
+          messageCount: 1,
+        });
+      }
+    } else {
+      // Create new session
+      currentSessionId = uuidv4();
+      chatSession = await ChatSession.create({
+        sessionId: currentSessionId,
+        organizationId: resolvedParams.organizationId,
+        agentId: agent._id,
+        userId: user.userId || user.walletAddress,
+        owner: user.walletAddress,
+        title: title || "New Chat",
+        lastMessageAt: new Date(),
+        messageCount: 1,
+      });
     }
 
     // Prepare context message with daoId for tool usage
@@ -92,11 +146,19 @@ export async function POST(
             content: message,
           });
 
+          // Send session info first
+          const sessionData = `data: ${JSON.stringify({
+            type: "session",
+            sessionId: currentSessionId,
+            title: chatSession.title,
+          })}\n\n`;
+          controller.enqueue(encoder.encode(sessionData));
+
           // Stream the agent's response
           const agentStream = agentCommonsService.runAgentStream({
             agentId: agent.agentId!,
             messages,
-            sessionId: sessionId || agent.sessionId,
+            sessionId: currentSessionId,
             initiator: user.walletAddress!,
           });
 

@@ -7,10 +7,11 @@ import {
   forwardRef,
   useImperativeHandle,
 } from "react";
-import { Bot, X, Send, Minimize2, Maximize2, Heart, Coins } from "lucide-react";
+import { Bot, X, Send, Minimize2, Maximize2, Heart, Coins, History, Plus } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
 import AgentFunding from "./AgentFunding";
 import AgentMarkdownRenderer from "./AgentMarkdownRenderer";
+import SessionHistory from "./SessionHistory";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -38,10 +39,12 @@ const AgentChatWidget = forwardRef<AgentChatWidgetRef, AgentChatWidgetProps>(
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState("");
     const [isLoading, setIsLoading] = useState(false);
-    const [sessionId] = useState<string | null>(null);
+    const [sessionId, setSessionId] = useState<string | null>(null);
+    const [sessionTitle, setSessionTitle] = useState<string>("New Chat");
     const [balance, setBalance] = useState<number | null>(null);
     const [isLoadingBalance, setIsLoadingBalance] = useState(true);
     const [agentId, setAgentId] = useState<string>("");
+    const [hasLoadedLastSession, setHasLoadedLastSession] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const { authenticated, authState } = useAuth();
 
@@ -56,6 +59,9 @@ const AgentChatWidget = forwardRef<AgentChatWidgetRef, AgentChatWidgetProps>(
     useEffect(() => {
       if (isOpen && authenticated) {
         loadAgentBalance();
+        if (!hasLoadedLastSession) {
+          loadLastSession();
+        }
       }
     }, [isOpen, authenticated]);
 
@@ -82,6 +88,38 @@ const AgentChatWidget = forwardRef<AgentChatWidgetRef, AgentChatWidgetProps>(
         console.error("Error loading agent balance:", error);
       } finally {
         setIsLoadingBalance(false);
+      }
+    };
+
+    const loadLastSession = async () => {
+      if (!authState.idToken) return;
+
+      try {
+        const response = await fetch(
+          `/api/agent/${organizationId}/sessions`,
+          {
+            headers: {
+              Authorization: `Bearer ${authState.idToken}`,
+            },
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          const sessions = data.data || [];
+
+          // Load the most recent session if available
+          if (sessions.length > 0) {
+            const lastSession = sessions[0]; // Already sorted by lastMessageAt desc
+            setSessionId(lastSession.sessionId);
+            setSessionTitle(lastSession.title);
+          }
+
+          setHasLoadedLastSession(true);
+        }
+      } catch (error) {
+        console.error("Error loading last session:", error);
+        setHasLoadedLastSession(true);
       }
     };
 
@@ -163,7 +201,11 @@ const AgentChatWidget = forwardRef<AgentChatWidgetRef, AgentChatWidgetProps>(
               try {
                 const data = JSON.parse(line.slice(6));
 
-                if (data.type === "token") {
+                if (data.type === "session") {
+                  // Update session info
+                  setSessionId(data.sessionId);
+                  setSessionTitle(data.title || "New Chat");
+                } else if (data.type === "token") {
                   assistantMessage += data.content;
                   setMessages((prev) => {
                     const newMessages = [...prev];
@@ -221,6 +263,23 @@ const AgentChatWidget = forwardRef<AgentChatWidgetRef, AgentChatWidgetProps>(
       }
     };
 
+    const handleSelectSession = (
+      newSessionId: string | null,
+      title: string
+    ) => {
+      // Clear current messages and start fresh with selected session
+      setMessages([]);
+      setSessionId(newSessionId);
+      setSessionTitle(title);
+    };
+
+    const handleNewChat = () => {
+      // Start a completely fresh chat session
+      setMessages([]);
+      setSessionId(null);
+      setSessionTitle("New Chat");
+    };
+
     if (!isOpen) {
       return (
         <button
@@ -251,6 +310,30 @@ const AgentChatWidget = forwardRef<AgentChatWidgetRef, AgentChatWidgetProps>(
               </div>
             </div>
             <div className="flex items-center gap-2">
+              <button
+                onClick={handleNewChat}
+                className="hover:bg-gray-200 rounded p-1 transition-colors"
+                aria-label="New chat"
+                title="Start new chat"
+              >
+                <Plus className="w-4 h-4" />
+              </button>
+              {authenticated && (
+                <SessionHistory
+                  organizationId={organizationId}
+                  currentSessionId={sessionId}
+                  authToken={authState.idToken}
+                  onSelectSession={handleSelectSession}
+                >
+                  <button
+                    className="hover:bg-gray-200 rounded p-1 transition-colors"
+                    aria-label="Session history"
+                    title="View chat history"
+                  >
+                    <History className="w-4 h-4" />
+                  </button>
+                </SessionHistory>
+              )}
               <button
                 onClick={() => setIsMinimized(!isMinimized)}
                 className="hover:bg-gray-200 rounded p-1 transition-colors"
