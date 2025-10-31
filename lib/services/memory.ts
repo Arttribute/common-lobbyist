@@ -177,6 +177,42 @@ export class MemoryService {
       );
     }
 
+    // Add comments/replies lookup for posts
+    pipeline.push({
+      $lookup: {
+        from: "contents",
+        let: { rootId: "$_id" },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  { $eq: ["$rootId", { $toString: "$$rootId" }] },
+                  { $ne: ["$_id", "$$rootId"] }, // Exclude the parent itself
+                  { $eq: ["$status", "published"] },
+                ],
+              },
+            },
+          },
+          {
+            $project: {
+              _id: 1,
+              type: 1,
+              content: 1,
+              authorId: 1,
+              onchain: 1,
+              userSignals: 1,
+              createdAt: 1,
+              depth: 1,
+            },
+          },
+          { $sort: { "onchain.totalQuadWeight": -1, createdAt: -1 } },
+          { $limit: 5 }, // Top 5 comments by weight
+        ],
+        as: "topComments",
+      },
+    });
+
     pipeline.push(
       {
         $limit: limit,
@@ -193,6 +229,7 @@ export class MemoryService {
           userSignals: 1,
           createdAt: 1,
           score: 1,
+          topComments: 1,
           ...(includeOnChainData && {
             "dao.name": 1,
             "dao.tokenName": 1,
@@ -204,7 +241,18 @@ export class MemoryService {
     );
 
     const results = await Content.aggregate(pipeline);
-    return results;
+
+    // Add proper content links to results
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+
+    return results.map((result) => ({
+      ...result,
+      link: `${appUrl}/organization/${result.daoId}/forum/${result.forumId}?contentId=${result._id}`,
+      topComments: result.topComments?.map((comment: any) => ({
+        ...comment,
+        link: `${appUrl}/organization/${result.daoId}/forum/${result.forumId}?contentId=${comment._id}`,
+      })),
+    }));
   }
 
   /**

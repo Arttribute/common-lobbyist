@@ -51,8 +51,26 @@ export default function AgentMarkdownRenderer({
         );
       }
 
+      // Check if this is a comment insight line
+      if (text.match(/Top comment|Key comment|Comment pattern/i)) {
+        return (
+          <p className="text-xs text-gray-700 bg-amber-50 border-l-2 border-amber-400 pl-3 py-1 my-2 italic" {...props}>
+            {children}
+          </p>
+        );
+      }
+
+      // Check if this is a data/metrics line
+      if (text.match(/\d+ supporters|tokens staked|\d+ matches/i)) {
+        return (
+          <p className="text-sm font-medium text-gray-800 mb-2" {...props}>
+            {children}
+          </p>
+        );
+      }
+
       return (
-        <p className="mb-3 leading-relaxed" {...props}>
+        <p className="mb-3 leading-relaxed text-sm" {...props}>
           {children}
         </p>
       );

@@ -154,12 +154,23 @@ const AgentChatWidget = forwardRef<AgentChatWidgetRef, AgentChatWidgetProps>(
         setIsOpen(true);
         setIsMinimized(false);
 
-        const thoughtsPrompt = `Based on the collective memory and discussions in this DAO, please provide insights about the following content:\n\n${content}\n\nWhat are your thoughts on this from the community perspective?`;
+        const thoughtsPrompt = `Analyze this new content:
+
+"${content}"
+
+TASK: Find similar past content and predict reception.
+1. Search for semantically similar discussions
+2. Analyze comments on those similar posts (check topComments)
+3. Identify: What worked? What concerns emerged? Who engaged (whales vs broad)?
+4. Predict reception based on patterns
+5. Note if this content shifts from past patterns
+
+Be SUCCINCT. Lead with data, then insights. Max 4-5 sentences total.`;
 
         // Add user message to display
         const userMessage: Message = {
           role: "user",
-          content: "Get content thoughts",
+          content: "Analyzing content...",
           timestamp: new Date(),
         };
         setMessages((prev) => [...prev, userMessage]);
