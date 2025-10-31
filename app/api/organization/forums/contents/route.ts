@@ -1,6 +1,7 @@
 // app/api/forums/contents/route.ts
 import dbConnect from "@/lib/dbConnect";
 import Content from "@/models/Content";
+import { memoryService } from "@/lib/services/memory";
 
 import { NextResponse } from "next/server";
 
@@ -84,6 +85,13 @@ export async function POST(request: Request) {
     tempContent.path = path;
 
     await tempContent.save();
+
+    // Index content asynchronously for semantic search (don't block response)
+    memoryService.indexContent(tempContent._id.toString()).catch((error) => {
+      console.error("Error indexing content:", error);
+      // Don't fail the request if indexing fails
+    });
+
     return NextResponse.json(tempContent, { status: 201 });
   } catch (error) {
     console.error("Error creating content:", error);
