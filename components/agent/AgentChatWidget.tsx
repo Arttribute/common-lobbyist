@@ -10,10 +10,10 @@ import {
 import { Bot, X, Send, Minimize2, Maximize2, Heart, Coins } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
 import AgentFunding from "./AgentFunding";
+import AgentMarkdownRenderer from "./AgentMarkdownRenderer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import ReactMarkdown from "react-markdown";
 
 interface Message {
   role: "user" | "assistant";
@@ -127,6 +127,7 @@ const AgentChatWidget = forwardRef<AgentChatWidgetRef, AgentChatWidgetProps>(
           body: JSON.stringify({
             message: messageContent,
             sessionId,
+            daoId: organizationId, // Pass daoId for tool context
           }),
         });
 
@@ -322,9 +323,7 @@ const AgentChatWidget = forwardRef<AgentChatWidgetRef, AgentChatWidgetProps>(
                     }`}
                   >
                     {message.role === "assistant" ? (
-                      <div className="text-sm prose prose-sm max-w-none">
-                        <ReactMarkdown>{message.content}</ReactMarkdown>
-                      </div>
+                      <AgentMarkdownRenderer content={message.content} />
                     ) : (
                       <p className="text-sm whitespace-pre-wrap">
                         {message.content}

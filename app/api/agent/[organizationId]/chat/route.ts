@@ -56,7 +56,7 @@ export async function POST(
     }
 
     const body = await request.json();
-    const { message, sessionId } = body;
+    const { message, sessionId, daoId } = body;
 
     if (!message) {
       return NextResponse.json(
@@ -65,20 +65,37 @@ export async function POST(
       );
     }
 
+    // Prepare context message with daoId for tool usage
+    const contextMessage = daoId
+      ? `[CONTEXT] You are operating in DAO with ID: ${daoId}. When using the lobbyistSemanticSearch tool, always use this daoId parameter.`
+      : "";
+
     // Create a ReadableStream for SSE
     const encoder = new TextEncoder();
     const stream = new ReadableStream({
       async start(controller) {
         try {
+          // Build messages array with context
+          const messages: Array<{ role: "user" | "system"; content: string }> = [];
+
+          // Add context message if daoId is provided
+          if (contextMessage) {
+            messages.push({
+              role: "system",
+              content: contextMessage,
+            });
+          }
+
+          // Add user message
+          messages.push({
+            role: "user",
+            content: message,
+          });
+
           // Stream the agent's response
           const agentStream = agentCommonsService.runAgentStream({
             agentId: agent.agentId!,
-            messages: [
-              {
-                role: "user",
-                content: message,
-              },
-            ],
+            messages,
             sessionId: sessionId || agent.sessionId,
             initiator: user.walletAddress!,
           });
