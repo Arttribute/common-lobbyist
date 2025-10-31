@@ -113,6 +113,31 @@ const AgentChatWidget = forwardRef<AgentChatWidgetRef, AgentChatWidgetProps>(
             const lastSession = sessions[0]; // Already sorted by lastMessageAt desc
             setSessionId(lastSession.sessionId);
             setSessionTitle(lastSession.title);
+
+            // Load the message history for this session
+            const sessionResponse = await fetch(
+              `/api/agent/${organizationId}/sessions/${lastSession.sessionId}`,
+              {
+                headers: {
+                  Authorization: `Bearer ${authState.idToken}`,
+                },
+              }
+            );
+
+            if (sessionResponse.ok) {
+              const sessionData = await sessionResponse.json();
+              const session = sessionData.data;
+
+              // Load message history
+              if (session.history && session.history.length > 0) {
+                const loadedMessages = session.history.map((msg: any) => ({
+                  role: msg.role,
+                  content: msg.content,
+                  timestamp: new Date(msg.timestamp),
+                }));
+                setMessages(loadedMessages);
+              }
+            }
           }
 
           setHasLoadedLastSession(true);
@@ -263,14 +288,45 @@ const AgentChatWidget = forwardRef<AgentChatWidgetRef, AgentChatWidgetProps>(
       }
     };
 
-    const handleSelectSession = (
+    const handleSelectSession = async (
       newSessionId: string | null,
       title: string
     ) => {
-      // Clear current messages and start fresh with selected session
+      // Clear current messages first
       setMessages([]);
       setSessionId(newSessionId);
       setSessionTitle(title);
+
+      // If a session is selected, load its message history
+      if (newSessionId && authState.idToken) {
+        try {
+          const response = await fetch(
+            `/api/agent/${organizationId}/sessions/${newSessionId}`,
+            {
+              headers: {
+                Authorization: `Bearer ${authState.idToken}`,
+              },
+            }
+          );
+
+          if (response.ok) {
+            const data = await response.json();
+            const session = data.data;
+
+            // Load message history
+            if (session.history && session.history.length > 0) {
+              const loadedMessages = session.history.map((msg: any) => ({
+                role: msg.role,
+                content: msg.content,
+                timestamp: new Date(msg.timestamp),
+              }));
+              setMessages(loadedMessages);
+            }
+          }
+        } catch (error) {
+          console.error("Error loading session history:", error);
+        }
+      }
     };
 
     const handleNewChat = () => {

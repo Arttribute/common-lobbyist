@@ -98,8 +98,10 @@ export default function AgentMarkdownRenderer({
     ),
 
     // Code blocks with syntax highlighting
-    code: ({ node, inline, className, children, ...props }) => {
-      if (inline) {
+    code: ({ node, className, children, ...props }) => {
+      // Check if it's inline code by checking if className exists (block code has className)
+      const isInline = !className;
+      if (isInline) {
         return (
           <code
             className="bg-gray-100 text-gray-800 px-1.5 py-0.5 rounded text-sm font-mono"

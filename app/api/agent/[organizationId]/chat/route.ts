@@ -128,6 +128,7 @@ export async function POST(
     const encoder = new TextEncoder();
     const stream = new ReadableStream({
       async start(controller) {
+        let assistantMessage = "";
         try {
           // Build messages array with context
           const messages: Array<{ role: "user" | "system"; content: string }> = [];
@@ -163,12 +164,36 @@ export async function POST(
           });
 
           for await (const chunk of agentStream) {
+            assistantMessage += chunk; // Capture the full message
             const sseData = `data: ${JSON.stringify({
               type: "token",
               content: chunk,
             })}\n\n`;
             controller.enqueue(encoder.encode(sseData));
           }
+
+          // Save messages to session history
+          await ChatSession.findOneAndUpdate(
+            { sessionId: currentSessionId },
+            {
+              $push: {
+                history: {
+                  $each: [
+                    {
+                      role: "user",
+                      content: message,
+                      timestamp: new Date(),
+                    },
+                    {
+                      role: "assistant",
+                      content: assistantMessage,
+                      timestamp: new Date(),
+                    },
+                  ],
+                },
+              },
+            }
+          );
 
           // Send completion signal
           const completionData = `data: ${JSON.stringify({

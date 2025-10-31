@@ -25,8 +25,8 @@ interface Session {
 interface SessionHistoryProps {
   organizationId: string;
   currentSessionId: string | null;
-  authToken: string | null;
-  onSelectSession: (sessionId: string | null, title: string) => void;
+  authToken: string | null | undefined;
+  onSelectSession: (sessionId: string | null, title: string) => void | Promise<void>;
   children: React.ReactNode; // Trigger button
 }
 

@@ -27,6 +27,18 @@ const ChatSessionSchema = new mongoose.Schema(
     // Session metadata
     title: { type: String, default: "New Chat" }, // Display name for session
 
+    // Message history
+    history: {
+      type: [
+        {
+          role: { type: String, enum: ["user", "assistant"], required: true },
+          content: { type: String, required: true },
+          timestamp: { type: Date, default: Date.now },
+        },
+      ],
+      default: [],
+    },
+
     // Activity tracking
     lastMessageAt: { type: Date, default: Date.now },
     messageCount: { type: Number, default: 0 },
