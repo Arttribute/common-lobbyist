@@ -225,39 +225,79 @@ async getRecentContent(
 return results.map(...);
 
 // After: returns object with separate arrays
+const shouldFetchRecent = includeRecentContext || (daoId && searchResults.length < 3);
+
 return {
   searchResults: results.map(...),
-  recentHappenings: includeRecentContext ? await this.getRecentContent(...) : []
+  recentHappenings: shouldFetchRecent ? await this.getRecentContent(...) : []
 };
 ```
 
+**Smart Fallback Logic**:
+- `recentHappenings` populated when:
+  1. User explicitly requests: `includeRecentContext: true`
+  2. **Auto-fallback**: When `searchResults.length < 3` (ensures user always sees something)
+- Minimum 3 posts guaranteed when DAO has content
+
 **Agent Instructions**:
-- ONLY use `includeRecentContext: true` when user asks about "recent", "latest", "what's new"
-- Format response to keep recent happenings separate from search results
-- Don't let recent items distract from exact semantic matches
+- Use `includeRecentContext: true` when user asks about "recent", "latest", "what's new"
+- When `searchResults` < 3, `recentHappenings` auto-populated as fallback
+- Format: "No close matches. Recent activity (last 24h): [recentHappenings list]"
+- Don't present recent items as search results - they're temporal context/fallback
 
 **Example Usage**:
+
+*Case 1: User explicitly asks about recent activity*
 ```typescript
-// User asks: "What's the latest discussion about treasury?"
+// User: "What's the latest discussion about treasury?"
 const { searchResults, recentHappenings } = await memoryService.semanticSearch(
   "treasury discussion",
   {
     daoId: "123",
-    includeRecentContext: true,  // Only because user asked about "latest"
+    includeRecentContext: true,  // User asked about "latest"
     includeOnChainData: true
   }
 );
+// recentHappenings will have 5 posts regardless of search results
+```
 
-// Agent response structure:
-// "Recent activity (last 24h): [5 recent posts]
-//  Regarding treasury: [semantic search results]"
+*Case 2: No matches found (auto-fallback)*
+```typescript
+// User: "What about quantum governance?"
+const { searchResults, recentHappenings } = await memoryService.semanticSearch(
+  "quantum governance",
+  {
+    daoId: "123",
+    includeOnChainData: true
+  }
+);
+// searchResults: [] (no matches)
+// recentHappenings: [5 posts] (auto-populated as fallback)
+// Agent: "No close matches. Recent activity (last 24h): [list]"
+```
+
+*Case 3: Good matches found*
+```typescript
+// User: "treasury proposals"
+const { searchResults, recentHappenings } = await memoryService.semanticSearch(
+  "treasury proposals",
+  {
+    daoId: "123",
+    includeOnChainData: true
+  }
+);
+// searchResults: [8 matches] (>= 3, so no fallback)
+// recentHappenings: [] (not needed)
+// Agent: "8 matches found: [list of matches]"
 ```
 
 **Benefits**:
+- **Smart fallback**: Users always see at least 3 posts, even with no matches
 - Recent content doesn't interfere with semantic relevance
 - Agent can provide temporal context when relevant
 - Users get both: exact matches + what's happening now
-- Clear separation prevents confusion
+- Clear separation prevents confusion between search results and recent activity
+- Better UX: No empty results - always actionable content
 
 ---
 
@@ -442,10 +482,12 @@ has shown various levels of interest in these topics."
 
 ```bash
 # Required for proper link generation
-NEXT_PUBLIC_APP_URL=https://your-domain.com
+# Used for webhooks, generating content links, and API callbacks
+# NO trailing slash
+NEXT_PUBLIC_BASE_URL=https://your-domain.com
 
 # Or for development
-NEXT_PUBLIC_APP_URL=http://localhost:3000
+NEXT_PUBLIC_BASE_URL=http://localhost:3000
 ```
 
 ### MongoDB Setup

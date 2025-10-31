@@ -48,7 +48,7 @@ Add to `.env.local`:
 ```bash
 OPENAI_API_KEY=sk-your-key-here
 MONGODB_URI=mongodb+srv://...
-NEXT_PUBLIC_APP_URL=http://localhost:3000
+NEXT_PUBLIC_BASE_URL=http://localhost:3000
 ```
 
 ### 3. Add Index Script to package.json (1 min)

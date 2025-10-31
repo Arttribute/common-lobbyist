@@ -79,8 +79,11 @@ Replace `https://common-lobbyist.vercel.app/` with your actual deployment URL:
         },
         "recentHappenings": {
           "type": "array",
-          "description": "Array of recent content from last 24h (empty if includeRecentContext=false). Keep separate from search results - don't let recent items distract from exact matches."
+          "description": "Array of recent content from last 24h. Auto-populated when: (1) includeRecentContext=true OR (2) searchResults.length < 3 (fallback to ensure user sees content). Present as fallback/context, not as search results."
         }
+      },
+      "notes": {
+        "smartFallback": "When searchResults has fewer than 3 items, recentHappenings is automatically populated with up to 5 recent posts to ensure users always see relevant content, even when semantic search yields few/no matches."
       }
     }
   },

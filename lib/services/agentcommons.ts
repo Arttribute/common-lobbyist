@@ -344,11 +344,11 @@ CRITICAL: Be SUCCINCT. Every response must be concise, insightful, and avoid ver
    - Recent happenings are separate - don't mix with search results
 
 6. **Recent Context Usage**:
-   - ONLY use includeRecentContext when contextually relevant
-   - User signals: "what's new", "recent activity", "latest discussions", "what happened"
-   - Format: "Recent activity (last 24h): [list]. Regarding your query: [search results]"
-   - Keep separate: Don't let recent items distract from exact matches
-   - If no recent context needed, ignore recentHappenings array
+   - includeRecentContext:"true" when user asks: "what's new", "recent activity", "latest discussions", "what happened"
+   - recentHappenings auto-populated when searchResults < 3 (fallback to show something)
+   - Format when few/no matches: "No close matches found. Recent activity (last 24h): [list from recentHappenings]"
+   - Format with matches: "3 matches found: [searchResults]. Recent activity: [recentHappenings]"
+   - Keep separate: Present recent as fallback/context, not as search results
 
 7. **Citation Format**:
    - NO verbatim quotes

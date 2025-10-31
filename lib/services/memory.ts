@@ -245,7 +245,7 @@ export class MemoryService {
     const results = await Content.aggregate(pipeline);
 
     // Add proper content links to results
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    const appUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
 
     const searchResults = results.map((result) => {
       // For posts: /forum/{organizationId}/{forumId}/post/{postId}
@@ -263,8 +263,15 @@ export class MemoryService {
       };
     });
 
-    // If recent context is requested, fetch recent content separately
-    if (includeRecentContext && daoId) {
+    // Fetch recent content if:
+    // 1. User explicitly requests it (includeRecentContext)
+    // 2. No search results found (fallback to show something)
+    // 3. Very few search results (< 3) and daoId available
+    const shouldFetchRecent =
+      includeRecentContext ||
+      (daoId && searchResults.length < 3);
+
+    if (shouldFetchRecent && daoId) {
       const recentContent = await this.getRecentContent(daoId, {
         limit: 5,
         hoursAgo: 24,
@@ -367,7 +374,7 @@ export class MemoryService {
     const results = await Content.aggregate(pipeline);
 
     // Add proper links
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    const appUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
 
     return results.map((result) => ({
       ...result,

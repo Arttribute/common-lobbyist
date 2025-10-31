@@ -241,7 +241,7 @@ export function formatToolSpecsForAgentCommons() {
     apiSpec: {
       endpoint: tool.endpoint,
       method: tool.method,
-      baseUrl: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
+      baseUrl: process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000',
     },
   }));
 }

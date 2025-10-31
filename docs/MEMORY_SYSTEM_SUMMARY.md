@@ -164,7 +164,7 @@ npm run index-content -- --status           # Check status
   ```bash
   OPENAI_API_KEY=your_key
   MONGODB_URI=mongodb+srv://...
-  NEXT_PUBLIC_APP_URL=http://localhost:3000
+  NEXT_PUBLIC_BASE_URL=http://localhost:3000
   AGENT_COMMONS_API_URL=http://localhost:4000
   ```
 

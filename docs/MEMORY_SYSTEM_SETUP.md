@@ -102,8 +102,8 @@ OPENAI_API_KEY=your_openai_api_key
 # MongoDB Atlas
 MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/database
 
-# Next.js App URL
-NEXT_PUBLIC_APP_URL=http://localhost:3000
+# Next.js App URL (NO trailing slash)
+NEXT_PUBLIC_BASE_URL=http://localhost:3000
 
 # Agent Commons API (if using)
 AGENT_COMMONS_API_URL=http://localhost:4000
