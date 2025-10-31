@@ -2,7 +2,7 @@
 
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { ExternalLink, Users, Coins } from "lucide-react";
+import { ExternalLink, Users, Coins, Link2 } from "lucide-react";
 import { Components } from "react-markdown";
 
 interface AgentMarkdownRendererProps {
@@ -23,18 +23,40 @@ export default function AgentMarkdownRenderer({
 }: AgentMarkdownRendererProps) {
   const components: Components = {
     // Enhanced link styling for citations
-    a: ({ node, children, href, ...props }) => (
-      <a
-        href={href}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 font-medium hover:underline transition-colors group"
-        {...props}
-      >
-        {children}
-        <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-      </a>
-    ),
+    a: ({ node, children, href, ...props }) => {
+      const isBlockscout = href?.includes("blockscout.com");
+
+      if (isBlockscout) {
+        // Blockscout transaction links - styled distinctly
+        return (
+          <a
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-purple-600 hover:text-purple-800 font-medium hover:underline transition-colors group border-b border-purple-300"
+            {...props}
+          >
+            <Link2 className="w-3 h-3" />
+            {children}
+            <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+          </a>
+        );
+      }
+
+      // Regular content links
+      return (
+        <a
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 font-medium hover:underline transition-colors group"
+          {...props}
+        >
+          {children}
+          <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+        </a>
+      );
+    },
 
     // Styled paragraphs with proper spacing
     p: ({ node, children, ...props }) => {

@@ -283,6 +283,7 @@ export default function OrganizationPage({ params }: PageParams) {
                   key={forum._id}
                   forum={forum}
                   organizationId={resolvedParams.organizationId}
+                  stats={forum.stats}
                 />
               ))}
             </div>

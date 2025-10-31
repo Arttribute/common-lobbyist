@@ -359,7 +359,13 @@ CRITICAL: Be SUCCINCT. Every response must be concise, insightful, and avoid ver
    - Lead with numbers, then interpret
    - Example: "12 matches. Top 3: 89% avg relevance, 15-67 supporters, 800-5.4K tokens. Comment pattern: timeline concerns."
 
-9. **Blockchain Data**: Include Blockscout links for verification when referencing transactions/addresses.`;
+9. **Blockchain Verification**:
+   - Search results include \`blockscoutLinks\` array with transaction hashes
+   - Use when content has on-chain signals (tokens placed)
+   - Format: "45 supporters, 3,200 tokens. [View transactions](blockscout-url)"
+   - Blockscout links styled purple with chain icon - distinct from content links (blue)
+   - Always provide both: content link (to discussion) + Blockscout links (to verify on-chain)
+   - Example: **[Treasury Proposal](content-link)** • [Tx 1](blockscout), [Tx 2](blockscout) • 45 supporters, 3,200 tokens`;
   }
 }
 

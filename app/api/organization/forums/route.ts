@@ -1,6 +1,7 @@
 // app/api/forums/route.ts
 import dbConnect from "@/lib/dbConnect";
 import Forum from "@/models/Forum";
+import Content from "@/models/Content";
 
 import { NextResponse } from "next/server";
 
@@ -19,7 +20,39 @@ export async function GET(request: Request) {
   try {
     await dbConnect();
     const forums = await Forum.find({ daoId: organizationId });
-    return NextResponse.json(forums || [], { status: 200 });
+
+    // Fetch post counts and last activity for each forum
+    const forumsWithStats = await Promise.all(
+      forums.map(async (forum) => {
+        const forumObj = forum.toObject();
+
+        // Count posts (not comments) in this forum
+        const postCount = await Content.countDocuments({
+          forumId: forum._id.toString(),
+          type: "post",
+          status: "published",
+        });
+
+        // Get the most recent post activity
+        const lastPost = await Content.findOne({
+          forumId: forum._id.toString(),
+          type: "post",
+          status: "published",
+        })
+          .sort({ lastActivityAt: -1 })
+          .select("lastActivityAt");
+
+        return {
+          ...forumObj,
+          stats: {
+            posts: postCount,
+            lastActivity: lastPost?.lastActivityAt,
+          },
+        };
+      })
+    );
+
+    return NextResponse.json(forumsWithStats || [], { status: 200 });
   } catch (error) {
     console.error("Error fetching forums:", error);
     return NextResponse.json([], { status: 200 });

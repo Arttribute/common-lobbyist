@@ -2,6 +2,7 @@ import dbConnect from "../dbConnect";
 import Content from "../../models/Content";
 import Organization from "../../models/Organization";
 import { embeddingService } from "./embedding";
+import { blockscoutService } from "./blockscout";
 
 /**
  * Memory Service
@@ -252,13 +253,44 @@ export class MemoryService {
       // For comments: /forum/{organizationId}/{forumId}/post/{rootId} (link to parent post)
       const contentId = result.type === "post" ? result._id : result.rootId;
 
+      // Extract unique transaction hashes from userSignals for Blockscout links
+      const txHashes = result.userSignals
+        ? Array.from(
+            new Set(
+              result.userSignals
+                .map((signal: any) => signal.txHash)
+                .filter((hash: string | undefined) => hash)
+            )
+          )
+        : [];
+
+      // Generate Blockscout links for transactions
+      const blockscoutLinks = txHashes.map((hash: string) => ({
+        txHash: hash,
+        url: blockscoutService.getExplorerLink("tx", hash),
+      }));
+
       return {
         ...result,
         link: `${appUrl}/forum/${result.daoId}/${result.forumId}/post/${contentId}`,
+        blockscoutLinks, // Add Blockscout transaction links
         topComments: result.topComments?.map((comment: any) => ({
           ...comment,
           // Comments link to their parent post
           link: `${appUrl}/forum/${result.daoId}/${result.forumId}/post/${result._id}`,
+          // Add Blockscout links for comment signals too
+          blockscoutLinks: comment.userSignals
+            ? Array.from(
+                new Set(
+                  comment.userSignals
+                    .map((signal: any) => signal.txHash)
+                    .filter((hash: string | undefined) => hash)
+                )
+              ).map((hash: string) => ({
+                txHash: hash,
+                url: blockscoutService.getExplorerLink("tx", hash),
+              }))
+            : [],
         })),
       };
     });
@@ -376,10 +408,30 @@ export class MemoryService {
     // Add proper links
     const appUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
 
-    return results.map((result) => ({
-      ...result,
-      link: `${appUrl}/forum/${result.daoId}/${result.forumId}/post/${result._id}`,
-    }));
+    return results.map((result) => {
+      // Extract unique transaction hashes from userSignals for Blockscout links
+      const txHashes = result.userSignals
+        ? Array.from(
+            new Set(
+              result.userSignals
+                .map((signal: any) => signal.txHash)
+                .filter((hash: string | undefined) => hash)
+            )
+          )
+        : [];
+
+      // Generate Blockscout links for transactions
+      const blockscoutLinks = txHashes.map((hash: string) => ({
+        txHash: hash,
+        url: blockscoutService.getExplorerLink("tx", hash),
+      }));
+
+      return {
+        ...result,
+        link: `${appUrl}/forum/${result.daoId}/${result.forumId}/post/${result._id}`,
+        blockscoutLinks,
+      };
+    });
   }
 
   /**

@@ -1,10 +1,10 @@
 # Advanced Agent Improvements - Phase 2
 
-This document outlines the advanced improvements made to enhance the agent's analytical capabilities, link generation, comment integration, recent content context, and succinct communication.
+This document outlines the advanced improvements made to enhance the agent's analytical capabilities, link generation, comment integration, recent content context, blockchain verification, and succinct communication.
 
 ## What Was Improved
 
-**Summary**: 7 major enhancements including fixed URLs, comment integration, weighted signal analysis, succinct communication, enhanced "Get Thoughts", special styling, and separate recent content feature.
+**Summary**: 8 major enhancements including fixed URLs, comment integration, weighted signal analysis, succinct communication, enhanced "Get Thoughts", special styling, separate recent content feature, and Blockscout transaction links.
 
 ### 1. ✅ Fixed Content Link Generation
 
@@ -298,6 +298,86 @@ const { searchResults, recentHappenings } = await memoryService.semanticSearch(
 - Users get both: exact matches + what's happening now
 - Clear separation prevents confusion between search results and recent activity
 - Better UX: No empty results - always actionable content
+
+---
+
+### 8. ✅ Blockscout Transaction Links (On-Chain Verification)
+
+**Files**: [models/Content.ts](../models/Content.ts:52), [lib/services/memory.ts](../lib/services/memory.ts:256-295), [components/agent/AgentMarkdownRenderer.tsx](../components/agent/AgentMarkdownRenderer.tsx:27-59)
+
+**Enhancement**: Integrated Blockscout blockchain explorer links for transaction verification
+
+**What Was Added**:
+
+1. **Content Model Extension**:
+```typescript
+userSignals: [
+  {
+    userId: { type: String, required: true },
+    amount: { type: String, required: true },
+    txHash: { type: String }, // NEW: Track transaction hash
+    placedAt: { type: Date },
+    lastUpdatedAt: { type: Date },
+  },
+]
+```
+
+2. **Memory Service Integration**:
+```typescript
+// Extract unique transaction hashes from userSignals
+const txHashes = result.userSignals
+  ? Array.from(new Set(result.userSignals
+      .map((signal: any) => signal.txHash)
+      .filter((hash) => hash)))
+  : [];
+
+// Generate Blockscout links
+const blockscoutLinks = txHashes.map((hash: string) => ({
+  txHash: hash,
+  url: blockscoutService.getExplorerLink("tx", hash),
+}));
+
+return {
+  ...result,
+  link: contentUrl,
+  blockscoutLinks, // NEW: Array of transaction links
+};
+```
+
+3. **Distinct Visual Styling**:
+- **Content Links**: Blue text with external link icon
+- **Blockscout Links**: Purple text with chain icon (🔗) and underline
+- Clear differentiation helps users understand link purpose
+
+**Agent Instructions**:
+```
+9. **Blockchain Verification**:
+   - Search results include blockscoutLinks array with transaction hashes
+   - Use when content has on-chain signals (tokens placed)
+   - Format: "45 supporters, 3,200 tokens. [View transactions](blockscout-url)"
+   - Always provide both: content link + Blockscout links
+```
+
+**Example Output**:
+```markdown
+**[Treasury Allocation Proposal](content-link)** • 78% match
+45 supporters • 3,200 tokens • [Tx 1](blockscout), [Tx 2](blockscout)
+
+Strong grassroots support (40 people × ~80 tokens each).
+Top comment: "Timeline needs clarification - add milestones"
+```
+
+**Blockscout URL Structure**:
+- Base Sepolia: `https://base-sepolia.blockscout.com/tx/{hash}`
+- Follows EIP-3091 standard
+- Supports: transactions, addresses, tokens, contracts
+
+**Benefits**:
+- **Transparency**: Users can verify on-chain activity
+- **Trust**: Direct link to blockchain proof
+- **Clarity**: Distinct styling prevents confusion with content links
+- **Completeness**: Both discussion link + verification links provided
+- **Audit Trail**: Transaction history accessible for governance
 
 ---
 

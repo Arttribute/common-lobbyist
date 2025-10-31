@@ -49,6 +49,7 @@ const ContentSchema = new mongoose.Schema(
       {
         userId: { type: String, required: true }, // wallet address or user ID
         amount: { type: String, required: true }, // amount of tokens placed (as string for BigInt)
+        txHash: { type: String }, // transaction hash of the signal placement on Blockscout
         placedAt: { type: Date, default: () => new Date() },
         lastUpdatedAt: { type: Date, default: () => new Date() },
       },
