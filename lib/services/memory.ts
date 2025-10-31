@@ -254,18 +254,18 @@ export class MemoryService {
       const contentId = result.type === "post" ? result._id : result.rootId;
 
       // Extract unique transaction hashes from userSignals for Blockscout links
-      const txHashes = result.userSignals
+      const txHashes: string[] = result.userSignals
         ? Array.from(
             new Set(
               result.userSignals
                 .map((signal: any) => signal.txHash)
-                .filter((hash: string | undefined) => hash)
+                .filter((hash: string | undefined): hash is string => !!hash)
             )
           )
         : [];
 
       // Generate Blockscout links for transactions
-      const blockscoutLinks = txHashes.map((hash: string) => ({
+      const blockscoutLinks = txHashes.map((hash) => ({
         txHash: hash,
         url: blockscoutService.getExplorerLink("tx", hash),
       }));
@@ -280,13 +280,13 @@ export class MemoryService {
           link: `${appUrl}/forum/${result.daoId}/${result.forumId}/post/${result._id}`,
           // Add Blockscout links for comment signals too
           blockscoutLinks: comment.userSignals
-            ? Array.from(
+            ? (Array.from(
                 new Set(
                   comment.userSignals
                     .map((signal: any) => signal.txHash)
-                    .filter((hash: string | undefined) => hash)
+                    .filter((hash: string | undefined): hash is string => !!hash)
                 )
-              ).map((hash: string) => ({
+              ) as string[]).map((hash) => ({
                 txHash: hash,
                 url: blockscoutService.getExplorerLink("tx", hash),
               }))
@@ -410,18 +410,18 @@ export class MemoryService {
 
     return results.map((result) => {
       // Extract unique transaction hashes from userSignals for Blockscout links
-      const txHashes = result.userSignals
+      const txHashes: string[] = result.userSignals
         ? Array.from(
             new Set(
               result.userSignals
                 .map((signal: any) => signal.txHash)
-                .filter((hash: string | undefined) => hash)
+                .filter((hash: string | undefined): hash is string => !!hash)
             )
           )
         : [];
 
       // Generate Blockscout links for transactions
-      const blockscoutLinks = txHashes.map((hash: string) => ({
+      const blockscoutLinks = txHashes.map((hash) => ({
         txHash: hash,
         url: blockscoutService.getExplorerLink("tx", hash),
       }));

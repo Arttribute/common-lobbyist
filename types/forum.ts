@@ -38,6 +38,10 @@ export interface Forum {
   slug: string;
   description?: string;
   daoId: string;
+  stats?: {
+    posts: number;
+    lastActivity?: string;
+  };
 }
 
 export interface Organization {
