@@ -1,8 +1,10 @@
 # Advanced Agent Improvements - Phase 2
 
-This document outlines the advanced improvements made to enhance the agent's analytical capabilities, link generation, comment integration, and succinct communication.
+This document outlines the advanced improvements made to enhance the agent's analytical capabilities, link generation, comment integration, recent content context, and succinct communication.
 
 ## What Was Improved
+
+**Summary**: 7 major enhancements including fixed URLs, comment integration, weighted signal analysis, succinct communication, enhanced "Get Thoughts", special styling, and separate recent content feature.
 
 ### 1. ✅ Fixed Content Link Generation
 
@@ -13,17 +15,20 @@ This document outlines the advanced improvements made to enhance the agent's ana
 **Solution**: Generate proper working URLs with baseUrl, daoId, forumId, and contentId
 
 ```typescript
-// Before: No links or dummy links
+// Before: Broken links using /organization/{id}/forum/{id}?contentId={id}
 
-// After: Proper working links
-return results.map((result) => ({
-  ...result,
-  link: `${appUrl}/organization/${result.daoId}/forum/${result.forumId}?contentId=${result._id}`,
-  topComments: result.topComments?.map((comment: any) => ({
-    ...comment,
-    link: `${appUrl}/organization/${result.daoId}/forum/${result.forumId}?contentId=${comment._id}`,
-  })),
-}));
+// After: Proper working links using /forum/{orgId}/{forumId}/post/{postId}
+return results.map((result) => {
+  const contentId = result.type === "post" ? result._id : result.rootId;
+  return {
+    ...result,
+    link: `${appUrl}/forum/${result.daoId}/${result.forumId}/post/${contentId}`,
+    topComments: result.topComments?.map((comment: any) => ({
+      ...comment,
+      link: `${appUrl}/forum/${result.daoId}/${result.forumId}/post/${result._id}`,
+    })),
+  };
+});
 ```
 
 **Impact**: All citations now have clickable, working links to actual content
@@ -190,6 +195,69 @@ This proposal lacks timeline - likely to face similar questions.
   45 supporters • 3,200 tokens • 5 whales control 60%
 </p>
 ```
+
+---
+
+### 7. ✅ Recent Content Context (Separate from Search)
+
+**File**: [lib/services/memory.ts](../lib/services/memory.ts#L267-L355)
+
+**Enhancement**: Added separate recent content functionality that doesn't pollute semantic search results
+
+**New Method**:
+```typescript
+async getRecentContent(
+  daoId: string,
+  options: {
+    limit?: number;
+    hoursAgo?: number;
+    includeOnChainData?: boolean;
+  } = {}
+) {
+  // Returns recent posts from last N hours
+  // Separate from semantic search to avoid pollution
+}
+```
+
+**Modified semanticSearch Return**:
+```typescript
+// Before: returned array directly
+return results.map(...);
+
+// After: returns object with separate arrays
+return {
+  searchResults: results.map(...),
+  recentHappenings: includeRecentContext ? await this.getRecentContent(...) : []
+};
+```
+
+**Agent Instructions**:
+- ONLY use `includeRecentContext: true` when user asks about "recent", "latest", "what's new"
+- Format response to keep recent happenings separate from search results
+- Don't let recent items distract from exact semantic matches
+
+**Example Usage**:
+```typescript
+// User asks: "What's the latest discussion about treasury?"
+const { searchResults, recentHappenings } = await memoryService.semanticSearch(
+  "treasury discussion",
+  {
+    daoId: "123",
+    includeRecentContext: true,  // Only because user asked about "latest"
+    includeOnChainData: true
+  }
+);
+
+// Agent response structure:
+// "Recent activity (last 24h): [5 recent posts]
+//  Regarding treasury: [semantic search results]"
+```
+
+**Benefits**:
+- Recent content doesn't interfere with semantic relevance
+- Agent can provide temporal context when relevant
+- Users get both: exact matches + what's happening now
+- Clear separation prevents confusion
 
 ---
 

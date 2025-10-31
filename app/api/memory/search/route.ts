@@ -44,8 +44,8 @@ export async function POST(request: NextRequest) {
       data: {
         query,
         filters: { daoId, forumId, authorId },
-        totalResults: results.length,
-        results: results.map((result: Record<string, unknown>) => ({
+        totalResults: results.searchResults.length,
+        results: results.searchResults.map((result: Record<string, unknown>) => ({
           ...result,
           // Format user signals for readability
           userSignals: Array.isArray(result.userSignals)
@@ -56,6 +56,7 @@ export async function POST(request: NextRequest) {
               }))
             : [],
         })),
+        recentHappenings: results.recentHappenings,
       },
     });
   } catch (error: unknown) {

@@ -11,6 +11,7 @@ import OrganizationCard from "@/components/organization-card";
 export default function OrganizationsPage() {
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [loading, setLoading] = useState(true);
+  const [forumCounts, setForumCounts] = useState<Record<string, number>>({});
 
   useEffect(() => {
     fetchOrganizations();
@@ -21,7 +22,29 @@ export default function OrganizationsPage() {
       setLoading(true);
       const res = await fetch("/api/organization");
       const data = await res.json();
-      setOrganizations(Array.isArray(data) ? data : []);
+      const orgs = Array.isArray(data) ? data : [];
+      setOrganizations(orgs);
+
+      // Fetch forum counts for each organization
+      const counts: Record<string, number> = {};
+      await Promise.all(
+        orgs.map(async (org) => {
+          try {
+            const forumsRes = await fetch(
+              `/api/organization/forums?organizationId=${org._id}`
+            );
+            const forums = await forumsRes.json();
+            counts[org._id] = Array.isArray(forums) ? forums.length : 0;
+          } catch (error) {
+            console.error(
+              `Error fetching forums for organization ${org._id}:`,
+              error
+            );
+            counts[org._id] = 0;
+          }
+        })
+      );
+      setForumCounts(counts);
     } catch (error) {
       console.error("Error fetching organizations:", error);
       setOrganizations([]);
@@ -79,7 +102,11 @@ export default function OrganizationsPage() {
             ) : (
               <div>
                 {organizations.map((org) => (
-                  <OrganizationCard key={org._id} organization={org} />
+                  <OrganizationCard
+                    key={org._id}
+                    organization={org}
+                    forumCount={forumCounts[org._id] || 0}
+                  />
                 ))}
               </div>
             )}

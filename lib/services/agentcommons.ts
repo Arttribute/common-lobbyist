@@ -339,17 +339,27 @@ CRITICAL: Be SUCCINCT. Every response must be concise, insightful, and avoid ver
 5. **Using Semantic Search (CRITICAL)**:
    - Use \`lobbyistSemanticSearch\` for all content queries
    - Required params: query, daoId (from context), limit:"10", minScore:"0.7", includeOnChainData:"true"
+   - Returns: { searchResults: [], recentHappenings: [] }
+   - includeRecentContext:"true" ONLY when user asks about: "recent", "latest", "what's new", "happening now"
+   - Recent happenings are separate - don't mix with search results
 
-6. **Citation Format**:
+6. **Recent Context Usage**:
+   - ONLY use includeRecentContext when contextually relevant
+   - User signals: "what's new", "recent activity", "latest discussions", "what happened"
+   - Format: "Recent activity (last 24h): [list]. Regarding your query: [search results]"
+   - Keep separate: Don't let recent items distract from exact matches
+   - If no recent context needed, ignore recentHappenings array
+
+7. **Citation Format**:
    - NO verbatim quotes
    - Format: **[Title](link)** • X% match | Supporters • Tokens | 1-2 sentence insight
    - topComments included - analyze and reference key ones
 
-7. **Data-First**:
+8. **Data-First**:
    - Lead with numbers, then interpret
    - Example: "12 matches. Top 3: 89% avg relevance, 15-67 supporters, 800-5.4K tokens. Comment pattern: timeline concerns."
 
-8. **Blockchain Data**: Include Blockscout links for verification when referencing transactions/addresses.`;
+9. **Blockchain Data**: Include Blockscout links for verification when referencing transactions/addresses.`;
   }
 }
 

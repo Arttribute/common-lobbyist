@@ -109,6 +109,7 @@ export class MemoryService {
       limit?: number;
       minScore?: number;
       includeOnChainData?: boolean;
+      includeRecentContext?: boolean;
     } = {}
   ) {
     await dbConnect();
@@ -120,6 +121,7 @@ export class MemoryService {
       limit = 10,
       minScore = 0.7,
       includeOnChainData = false,
+      includeRecentContext = false,
     } = options;
 
     // Generate embedding for the query
@@ -245,13 +247,131 @@ export class MemoryService {
     // Add proper content links to results
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
+    const searchResults = results.map((result) => {
+      // For posts: /forum/{organizationId}/{forumId}/post/{postId}
+      // For comments: /forum/{organizationId}/{forumId}/post/{rootId} (link to parent post)
+      const contentId = result.type === "post" ? result._id : result.rootId;
+
+      return {
+        ...result,
+        link: `${appUrl}/forum/${result.daoId}/${result.forumId}/post/${contentId}`,
+        topComments: result.topComments?.map((comment: any) => ({
+          ...comment,
+          // Comments link to their parent post
+          link: `${appUrl}/forum/${result.daoId}/${result.forumId}/post/${result._id}`,
+        })),
+      };
+    });
+
+    // If recent context is requested, fetch recent content separately
+    if (includeRecentContext && daoId) {
+      const recentContent = await this.getRecentContent(daoId, {
+        limit: 5,
+        hoursAgo: 24,
+        includeOnChainData,
+      });
+
+      return {
+        searchResults,
+        recentHappenings: recentContent,
+      };
+    }
+
+    return {
+      searchResults,
+      recentHappenings: [],
+    };
+  }
+
+  /**
+   * Get recent content from a DAO (for context about recent happenings)
+   * This is separate from semantic search to avoid polluting search results
+   * @param daoId - The DAO/organization ID
+   * @param options - Options for recent content
+   * @returns Array of recent content with metadata
+   */
+  async getRecentContent(
+    daoId: string,
+    options: {
+      limit?: number;
+      hoursAgo?: number;
+      includeOnChainData?: boolean;
+    } = {}
+  ) {
+    await dbConnect();
+
+    const { limit = 5, hoursAgo = 24, includeOnChainData = false } = options;
+
+    // Calculate time threshold
+    const timeThreshold = new Date();
+    timeThreshold.setHours(timeThreshold.getHours() - hoursAgo);
+
+    const pipeline: any[] = [
+      {
+        $match: {
+          daoId,
+          status: "published",
+          type: "post", // Only posts, not comments
+          createdAt: { $gte: timeThreshold },
+        },
+      },
+      {
+        $sort: {
+          createdAt: -1,
+        },
+      },
+      {
+        $limit: limit,
+      },
+    ];
+
+    // Add on-chain data if requested
+    if (includeOnChainData) {
+      pipeline.push(
+        {
+          $lookup: {
+            from: "organizations",
+            localField: "daoId",
+            foreignField: "_id",
+            as: "dao",
+          },
+        },
+        {
+          $unwind: {
+            path: "$dao",
+            preserveNullAndEmptyArrays: true,
+          },
+        }
+      );
+    }
+
+    pipeline.push({
+      $project: {
+        _id: 1,
+        type: 1,
+        daoId: 1,
+        forumId: 1,
+        authorId: 1,
+        content: 1,
+        onchain: 1,
+        userSignals: 1,
+        createdAt: 1,
+        ...(includeOnChainData && {
+          "dao.name": 1,
+          "dao.tokenName": 1,
+          "dao.tokenSymbol": 1,
+        }),
+      },
+    });
+
+    const results = await Content.aggregate(pipeline);
+
+    // Add proper links
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+
     return results.map((result) => ({
       ...result,
-      link: `${appUrl}/organization/${result.daoId}/forum/${result.forumId}?contentId=${result._id}`,
-      topComments: result.topComments?.map((comment: any) => ({
-        ...comment,
-        link: `${appUrl}/organization/${result.daoId}/forum/${result.forumId}?contentId=${comment._id}`,
-      })),
+      link: `${appUrl}/forum/${result.daoId}/${result.forumId}/post/${result._id}`,
     }));
   }
 
@@ -311,7 +431,7 @@ export class MemoryService {
     // Get similar content (if embeddings exist)
     let similarContent: unknown[] = [];
     if (typedContent.embeddings?.vector) {
-      const searchResults = await this.semanticSearch(
+      const { searchResults } = await this.semanticSearch(
         typedContent.content?.text || typedContent.content?.title || "",
         {
           daoId: typedContent.daoId,

@@ -19,7 +19,7 @@ Replace `https://common-lobbyist.vercel.app/` with your actual deployment URL:
 [
   {
     "name": "semanticSearch",
-    "description": "Perform semantic search on DAO content with optional on-chain data. Search through indexed content using natural language queries.",
+    "description": "Perform semantic search on DAO content with optional on-chain data and recent context. Search through indexed content using natural language queries. Returns both search results and optionally recent happenings (last 24h) as separate arrays.",
     "apiSpec": {
       "path": "/api/memory/search",
       "method": "POST",
@@ -62,6 +62,24 @@ Replace `https://common-lobbyist.vercel.app/` with your actual deployment URL:
           "type": "boolean",
           "description": "Include on-chain data in results (default: false)",
           "default": false
+        },
+        "includeRecentContext": {
+          "type": "boolean",
+          "description": "Include recent happenings from last 24h as separate array. Use ONLY when user asks about recent activity, latest discussions, or what's new. (default: false)",
+          "default": false
+        }
+      }
+    },
+    "returns": {
+      "type": "object",
+      "properties": {
+        "searchResults": {
+          "type": "array",
+          "description": "Array of semantically matched content items with scores, links, and topComments"
+        },
+        "recentHappenings": {
+          "type": "array",
+          "description": "Array of recent content from last 24h (empty if includeRecentContext=false). Keep separate from search results - don't let recent items distract from exact matches."
         }
       }
     }
